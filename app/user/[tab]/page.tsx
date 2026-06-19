@@ -1,11 +1,10 @@
 import { Metadata, ResolvingMetadata } from "next"
 import { notFound, redirect } from "next/navigation"
+import { currentUser } from "@clerk/nextjs/server"
 import { CakeSlice } from "lucide-react"
 
 import { profileTabs } from "@/config/conf"
 import { prisma } from "@/lib/db"
-import { HnUser } from "@/lib/hn-types"
-import { currentUser } from "@clerk/nextjs/server"
 import { formatDate } from "@/lib/time-utils"
 import { Separator } from "@/components/ui/separator"
 
@@ -37,25 +36,60 @@ export async function generateMetadata(
   }
 }
 
+export type UserProfileDetails = {
+  about: string
+  website: string | null
+  discipline: string | null
+  affiliationStatus: string | null
+  location: string | null
+  timezone: string | null
+}
+
+type ProfileUser = {
+  id: string
+  created: number
+  karma: number
+  profile: UserProfileDetails
+}
+
 export default async function TabPage({ params, searchParams }: Props) {
-  const target = searchParams.id
-  const local = await prisma.user.findFirst({
-    where: { OR: [{ username: target }, { clerkId: target }] },
-    include: { profile: true },
-  })
+  const cu = await currentUser()
+  const target = searchParams.id || cu?.username || cu?.id
+  let local = target
+    ? await prisma.user.findFirst({
+        where: { OR: [{ username: target }, { clerkId: target }] },
+        include: { profile: true },
+      })
+    : null
+
+  if (!local && cu && (target === cu.username || target === cu.id)) {
+    local = await prisma.user.create({
+      data: {
+        clerkId: cu.id,
+        username: cu.username || cu.id,
+        profile: { create: {} },
+      },
+      include: { profile: true },
+    })
+  }
+
   if (!local) {
     notFound()
   }
-  const user: HnUser = {
+  const user: ProfileUser = {
     id: local.username || local.clerkId,
-    about: local.profile?.about || "",
     created: Math.floor(new Date(local.createdAt).getTime() / 1000),
     karma: local.profile?.karma || 0,
-    submitted: [],
+    profile: {
+      about: local.profile?.about || "",
+      website: local.profile?.website || null,
+      discipline: local.profile?.discipline || null,
+      affiliationStatus: local.profile?.affiliationStatus || null,
+      location: local.profile?.location || null,
+      timezone: local.profile?.timezone || null,
+    },
   }
-  const cu = await currentUser()
-  const myUserId = cu?.username || cu?.id
-  const myself = myUserId === user.id
+  const myself = cu?.id === local.clerkId
   const myselfTab = profileTabs
     .filter((item) => item.public === false)
     .map((item) => item.label.toLowerCase())
@@ -67,29 +101,31 @@ export default async function TabPage({ params, searchParams }: Props) {
     <div className="flex flex-col space-y-3 pt-2">
       <UserInfo user={user} />
       <Separator orientation="horizontal" />
-      <ProfileTab userId={user.id} myself={myUserId === user.id} />
-      {params.tab === "about" && <TabAbout content={user?.about} />}
+      <ProfileTab userId={user.id} myself={myself} />
+      {params.tab === "about" && (
+        <TabAbout profile={user.profile} myself={myself} />
+      )}
       {params.tab === "submitted" && (
         <TabSubmitted
-          userId={searchParams.id}
+          userId={user.id}
           next={searchParams.next}
           n={searchParams.n}
         />
       )}
       {params.tab === "comments" && (
-        <TabComments userId={searchParams.id} next={searchParams.next} />
+        <TabComments userId={user.id} next={searchParams.next} />
       )}
       {params.tab === "favorites" && (
-        <TabFavorites userId={searchParams.id} type={searchParams.type} />
+        <TabFavorites userId={user.id} type={searchParams.type} />
       )}
       {params.tab === "upvoted" && (
-        <TabUpvoted userId={searchParams.id} type={searchParams.type} />
+        <TabUpvoted userId={user.id} type={searchParams.type} />
       )}
     </div>
   )
 }
 
-function UserInfo({ user }: { user: HnUser }) {
+function UserInfo({ user }: { user: ProfileUser }) {
   return (
     <div className="flex flex-col space-y-2">
       <h1 className="text-3xl font-semibold">{user?.id}</h1>

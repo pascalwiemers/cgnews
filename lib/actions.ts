@@ -12,6 +12,9 @@ import {
 import { prisma } from "@/lib/db"
 import { parseSubmitStoryForm, storyTypeFeedPath } from "@/lib/submit-story"
 
+const PROFILE_TEXT_LIMIT = 120
+const PROFILE_ABOUT_LIMIT = 800
+
 const goto = (path: string | FormData) => {
   let target: string = "/"
   if (typeof path === "string") {
@@ -21,6 +24,62 @@ const goto = (path: string | FormData) => {
   }
   revalidatePath(target.substring(0, target.lastIndexOf("?")))
   redirect(target)
+}
+
+const trimProfileText = (
+  value: FormDataEntryValue | null,
+  maxLength = PROFILE_TEXT_LIMIT
+) => {
+  if (typeof value !== "string") return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  return trimmed.slice(0, maxLength)
+}
+
+const normalizeWebsite = (value: FormDataEntryValue | null) => {
+  const trimmed = trimProfileText(value, 2048)
+  if (!trimmed) return null
+
+  const candidate = /^[a-z][a-z\d+\-.]*:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`
+
+  try {
+    const url = new URL(candidate)
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null
+    return url.toString()
+  } catch {
+    return null
+  }
+}
+
+async function getOrCreateLocalUser(clerkId: string) {
+  const clerkUser = await currentUser()
+  const username = clerkUser?.username || clerkId
+  const user = await prisma.user.findUnique({ where: { clerkId } })
+
+  if (!user) {
+    return prisma.user.create({
+      data: {
+        clerkId,
+        username,
+        profile: { create: {} },
+      },
+    })
+  }
+
+  if (user.username !== username) {
+    try {
+      return await prisma.user.update({
+        where: { id: user.id },
+        data: { username },
+      })
+    } catch {
+      return user
+    }
+  }
+
+  return user
 }
 
 export const faveAction = async (storyId: number, faved: boolean) => {
@@ -41,6 +100,35 @@ export const faveAction = async (storyId: number, faved: boolean) => {
   }
   revalidatePath("/user/favorites")
   return { success: true }
+}
+
+export const updateProfileAction = async (formData: FormData) => {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) {
+    redirect("/login?goto=/user/about")
+  }
+
+  const user = await getOrCreateLocalUser(clerkId)
+  const profile = {
+    about: trimProfileText(formData.get("about"), PROFILE_ABOUT_LIMIT) || "",
+    website: normalizeWebsite(formData.get("website")),
+    discipline: trimProfileText(formData.get("discipline")),
+    affiliationStatus: trimProfileText(formData.get("affiliationStatus")),
+    location: trimProfileText(formData.get("location")),
+    timezone: trimProfileText(formData.get("timezone")),
+  }
+
+  await prisma.profile.upsert({
+    where: { userId: user.id },
+    update: profile,
+    create: {
+      userId: user.id,
+      ...profile,
+    },
+  })
+
+  revalidatePath("/user/about")
+  redirect(`/user/about?id=${encodeURIComponent(user.username)}`)
 }
 
 export const replyAction = async ({
