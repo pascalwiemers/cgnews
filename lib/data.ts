@@ -30,6 +30,7 @@ function storyWhere(storyType: StoryTypeParam) {
 type StoryWithAuthor = Prisma.StoryGetPayload<{
   include: {
     author: { select: { username: true } }
+    curator: { select: { username: true } }
     _count: { select: { comments: true } }
   }
 }>
@@ -48,11 +49,17 @@ function toHnItem(story: StoryWithAuthor): HnItem {
     score: story.score ?? 0,
     title: story.title,
     descendants: story._count?.comments ?? story.descendants ?? 0,
+    curatorNote: story.curatorNote ?? undefined,
+    curator: story.curator?.username,
+    featuredAt: story.featuredAt
+      ? Math.floor(new Date(story.featuredAt).getTime() / 1000)
+      : undefined,
   }
 }
 
 const storyInclude = {
   author: { select: { username: true } },
+  curator: { select: { username: true } },
   _count: { select: { comments: true } },
 } satisfies Prisma.StoryInclude
 

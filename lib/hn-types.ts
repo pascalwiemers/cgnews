@@ -31,6 +31,9 @@ export interface HnItem {
   title?: string
   parts?: number[]
   descendants: number
+  curatorNote?: string
+  curator?: string
+  featuredAt?: number
 }
 
 export interface HnComment extends HnItem {

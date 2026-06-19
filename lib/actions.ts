@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth, currentUser } from "@clerk/nextjs/server"
 import { prisma } from "@/lib/db"
+import {
+  getOrCreateCuratorUser,
+  normalizeCuratorNote,
+  requireCurator,
+} from "@/lib/curators"
 
 const goto = (path: string | FormData) => {
   let target: string = "/"
@@ -186,6 +191,58 @@ export const submitStoryAction = async (formData: FormData) => {
     revalidatePath("/user/submitted")
     redirect(`/ask`)
   }
+}
+
+export const updateCuratorNoteAction = async (formData: FormData) => {
+  let clerkId: string
+  try {
+    clerkId = await requireCurator()
+  } catch (_) {
+    return { success: false, message: "Forbidden" }
+  }
+
+  const storyId = Number(formData.get("storyId"))
+  if (!Number.isInteger(storyId) || storyId < 1) {
+    return { success: false, message: "Invalid story" }
+  }
+
+  const curator = await getOrCreateCuratorUser(clerkId)
+  await prisma.story.update({
+    where: { id: storyId },
+    data: {
+      curatorNote: normalizeCuratorNote(formData.get("curatorNote")) || null,
+      curatorId: curator.id,
+    },
+  })
+  revalidatePath("/item")
+  return { success: true }
+}
+
+export const updateFeaturedStoryAction = async (formData: FormData) => {
+  let clerkId: string
+  try {
+    clerkId = await requireCurator()
+  } catch (_) {
+    return { success: false, message: "Forbidden" }
+  }
+
+  const storyId = Number(formData.get("storyId"))
+  if (!Number.isInteger(storyId) || storyId < 1) {
+    return { success: false, message: "Invalid story" }
+  }
+
+  const curator = await getOrCreateCuratorUser(clerkId)
+  const featured = formData.get("featured") === "true"
+  await prisma.story.update({
+    where: { id: storyId },
+    data: {
+      featuredAt: featured ? new Date() : null,
+      curatorId: curator.id,
+    },
+  })
+  revalidatePath("/item")
+  revalidatePath("/")
+  return { success: true }
 }
 
 export const logoutAction = async () => {
