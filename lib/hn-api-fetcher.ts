@@ -1,8 +1,8 @@
 import { getHnApiUrl } from "@/config/urls"
 
-import { HnItem, HnStoryType, HnUser } from "./hn-types"
+import { HnComment, HnItem, HnStoryType, HnUser } from "./hn-types"
 
-async function fetchData(type: string) {
+async function fetchData<T>(type: string) {
   const res = await fetch(getHnApiUrl(`${type}.json`), {
     next: {
       revalidate: 120,
@@ -11,11 +11,11 @@ async function fetchData(type: string) {
   if (res.status !== 200) {
     throw new Error(`Status ${res.status}`)
   }
-  return res.json()
+  return res.json() as Promise<T>
 }
 
 export async function fetchStoryIds(type: HnStoryType) {
-  const storyIds = await fetchData(type)
+  const storyIds = await fetchData<number[]>(type)
   if (!storyIds) {
     return []
   } else {
@@ -24,12 +24,12 @@ export async function fetchStoryIds(type: HnStoryType) {
 }
 
 export async function fetchUser(userId: string) {
-  const user = await fetchData(`user/${userId}`)
+  const user = await fetchData<HnUser>(`user/${userId}`)
   return safeUser(user)
 }
 
 export async function fetchItem(id: number) {
-  const hnItem = await fetchData(`item/${id}`)
+  const hnItem = await fetchData<HnItem>(`item/${id}`)
   return safeItem(hnItem)
 }
 
@@ -55,6 +55,10 @@ export function safeUser(val: HnUser) {
   }
 }
 
+function isHnComment(comment: HnItem | null): comment is HnComment {
+  return comment !== null
+}
+
 export async function fetchStories(ids: number[]) {
   const stories = (await Promise.all(
     ids.map(async (itemId) => {
@@ -67,10 +71,12 @@ export async function fetchStories(ids: number[]) {
 export function fetchComments(ids: number[]) {
   return Promise.all(
     ids.map(async (id) => {
-      const val = await fetchData(`item/${id}`)
+      const val = await fetchData<HnComment>(`item/${id}`)
       val.comments =
-        val.kids && val.kids.length > 0 ? await fetchComments(val.kids) : []
-      return safeItem(val)
+        val.kids && val.kids.length > 0
+          ? (await fetchComments(val.kids)).filter(isHnComment)
+          : []
+      return safeItem(val) as HnComment | null
     })
   )
 }

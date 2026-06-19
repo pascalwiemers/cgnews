@@ -1,6 +1,10 @@
 import { getAlgoliaApiUrl } from "@/config/urls"
 
-import { HnItem, HnItemType } from "./hn-types"
+import { HnItem, HnItemType, HnSearchItem } from "./hn-types"
+
+interface HnAlgoliaSearchResponse {
+  hits?: HnSearchItem[]
+}
 
 export const search = async ({
   query,
@@ -30,9 +34,9 @@ export const search = async ({
       revalidate: 1800,
     },
   })
-  const json = await resp.json()
+  const json = (await resp.json()) as HnAlgoliaSearchResponse
   if (json && json.hits) {
-    const searchItemList = json.hits.map((item: any) => {
+    const searchItemList = json.hits.map((item) => {
       return {
         id: item.story_id,
         deleted: false,
@@ -41,11 +45,11 @@ export const search = async ({
         time: item.created_at_i,
         text: item.story_text,
         dead: false,
-        parent: item.parent_id,
+        parent: Number(item.parent_id),
         url: item.url,
-        score: item.points,
-        title: item.title,
-        descendants: item.num_comments,
+        score: item.points || 0,
+        title: item.title || item.story_title,
+        descendants: item.num_comments || 0,
       } as HnItem
     })
     return searchItemList

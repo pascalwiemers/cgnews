@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cgnews",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-06-19",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "cgnews"
+    }
+  ],
+  // Thread J: replace this placeholder with the real D1 database binding
+  // after the Prisma/D1 adapter migration is designed and validated.
+  // "d1_databases": [
+  //   {
+  //     "binding": "DB",
+  //     "database_name": "cgnews",
+  //     "database_id": "<D1_DATABASE_ID>"
+  //   }
+  // ]
+}

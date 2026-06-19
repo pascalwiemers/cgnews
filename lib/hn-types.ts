@@ -74,11 +74,15 @@ export interface HnSearchItem {
   comment_text: string
   created_at: string
   created_at_i: number
+  num_comments?: number
   objectID: string
   parent_id: string
   points?: number
   story_id: number
   story_title: string
+  story_text?: string
   story_url?: string
+  title?: string
   updated_at: string
+  url?: string
 }
