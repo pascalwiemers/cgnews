@@ -64,9 +64,13 @@ model Story {
   votes                Vote[]
   favorites            Favorite[]
 
-  @@index([createdAt])
-  @@index([score])
-  @@index([type])
+  @@index([createdAt, id])
+  @@index([score, createdAt, id])
+  @@index([type, createdAt, id])
+  @@index([type, score, createdAt, id])
+  @@index([authorId, createdAt, id])
+  @@index([title])
+  @@index([url])
   @@index([featuredAt])
   @@index([curatorId])
 }
@@ -83,8 +87,8 @@ model Comment {
   parent    Comment?  @relation("CommentToComment", fields: [parentId], references: [id])
   children  Comment[] @relation("CommentToComment")
 
-  @@index([storyId])
-  @@index([authorId])
+  @@index([storyId, createdAt, id])
+  @@index([authorId, createdAt, id])
   @@index([parentId])
 }
 
@@ -96,6 +100,7 @@ model Vote {
   story     Story    @relation(fields: [storyId], references: [id])
 
   @@id([userId, storyId])
+  @@index([userId, createdAt, storyId])
   @@index([storyId])
 }
 
@@ -107,5 +112,6 @@ model Favorite {
   story     Story    @relation(fields: [storyId], references: [id])
 
   @@id([userId, storyId])
+  @@index([userId, createdAt, storyId])
   @@index([storyId])
 }

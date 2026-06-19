@@ -1,5 +1,7 @@
+import { unstable_cache } from "next/cache"
 import type { Prisma } from "@prisma/client"
 
+import { PUBLIC_FEED_CACHE_TAG, PUBLIC_SEARCH_CACHE_TAG } from "./cache-tags"
 import { getDb } from "./db"
 import { HnItem, HnItemType } from "./hn-types"
 import { HnWebThread } from "./hn-web-types"
@@ -23,7 +25,19 @@ const typeMap: Partial<Record<StoryTypeParam, StoredStoryType>> = {
   jobstories: "JOB",
 }
 
-function storyWhere(storyType: StoryTypeParam) {
+type PublicStoryOrder = "hot" | "new" | "top"
+type SearchOrder = "date" | "score"
+
+export type StoryPage = {
+  stories: HnItem[]
+  nextCursor?: string
+}
+
+const PUBLIC_FEED_REVALIDATE_SECONDS = 60
+const MAX_PUBLIC_PAGE_SIZE = 50
+const HOT_WINDOW_SIZE = 120
+
+function storyWhere(storyType: StoryTypeParam): Prisma.StoryWhereInput {
   const type = typeMap[storyType]
   return type ? { type } : {}
 }
@@ -69,70 +83,208 @@ const storyInclude = {
   _count: { select: { comments: true } },
 } satisfies Prisma.StoryInclude
 
-export async function listStories({
+function normalizePageSize(pageSize: number) {
+  if (!Number.isFinite(pageSize)) return 30
+  return Math.min(Math.max(Math.floor(pageSize), 1), MAX_PUBLIC_PAGE_SIZE)
+}
+
+function andWhere(
+  ...parts: Array<Prisma.StoryWhereInput | undefined>
+): Prisma.StoryWhereInput {
+  const filtered = parts.filter(Boolean) as Prisma.StoryWhereInput[]
+  if (filtered.length === 0) return {}
+  if (filtered.length === 1) return filtered[0]
+  return { AND: filtered }
+}
+
+function dateFromMillis(value: string) {
+  const millis = Number(value)
+  if (!Number.isFinite(millis)) return null
+  const date = new Date(millis)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function encodeNewCursor(story: Pick<StoryWithAuthor, "createdAt" | "id">) {
+  return ["n", story.createdAt.getTime(), story.id].join(":")
+}
+
+function encodeTopCursor(
+  story: Pick<StoryWithAuthor, "score" | "createdAt" | "id">
+) {
+  return ["t", story.score ?? 0, story.createdAt.getTime(), story.id].join(":")
+}
+
+function encodeHotCursor(story: Pick<StoryWithAuthor, "id">) {
+  return ["h", story.id].join(":")
+}
+
+function parseNewCursor(cursor?: string): Prisma.StoryWhereInput | undefined {
+  if (!cursor) return undefined
+  const [kind, millis, idValue] = cursor.split(":")
+  if (kind !== "n") return undefined
+
+  const createdAt = dateFromMillis(millis)
+  const id = Number(idValue)
+  if (!createdAt || !Number.isInteger(id)) return undefined
+
+  return {
+    OR: [
+      { createdAt: { lt: createdAt } },
+      { createdAt: { equals: createdAt }, id: { lt: id } },
+    ],
+  }
+}
+
+function parseTopCursor(cursor?: string): Prisma.StoryWhereInput | undefined {
+  if (!cursor) return undefined
+  const [kind, scoreValue, millis, idValue] = cursor.split(":")
+  if (kind !== "t") return undefined
+
+  const score = Number(scoreValue)
+  const createdAt = dateFromMillis(millis)
+  const id = Number(idValue)
+  if (!Number.isFinite(score) || !createdAt || !Number.isInteger(id)) {
+    return undefined
+  }
+
+  return {
+    OR: [
+      { score: { lt: score } },
+      { score, createdAt: { lt: createdAt } },
+      { score, createdAt: { equals: createdAt }, id: { lt: id } },
+    ],
+  }
+}
+
+function parseHotCursorId(cursor?: string) {
+  if (!cursor) return null
+  const [kind, idValue] = cursor.split(":")
+  const id = Number(idValue)
+  return kind === "h" && Number.isInteger(id) ? id : null
+}
+
+function splitPage<T>(items: T[], pageSize: number) {
+  return {
+    pageItems: items.slice(0, pageSize),
+    hasMore: items.length > pageSize,
+  }
+}
+
+async function listStoriesUncached({
   storyType,
-  page = 1,
   pageSize = 30,
   order = "hot",
+  cursor,
 }: {
   storyType: StoryTypeParam
-  page?: number
   pageSize?: number
-  order?: "hot" | "new" | "top"
-}) {
-  const skip = (page - 1) * pageSize
+  order?: PublicStoryOrder
+  cursor?: string
+}): Promise<StoryPage> {
+  const limit = normalizePageSize(pageSize)
   const where = storyWhere(storyType)
   const db = await getDb()
   if (order === "new") {
     const stories = await db.story.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip,
-      take: pageSize,
+      where: andWhere(where, parseNewCursor(cursor)),
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
       include: storyInclude,
     })
-    return stories.map(toHnItem)
+    const { pageItems, hasMore } = splitPage(stories, limit)
+    return {
+      stories: pageItems.map(toHnItem),
+      nextCursor: hasMore
+        ? encodeNewCursor(pageItems[pageItems.length - 1])
+        : undefined,
+    }
   }
   if (order === "top") {
     const stories = await db.story.findMany({
-      where,
-      orderBy: { score: "desc" },
-      skip,
-      take: pageSize,
+      where: andWhere(where, parseTopCursor(cursor)),
+      orderBy: [{ score: "desc" }, { createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
       include: storyInclude,
     })
-    return stories.map(toHnItem)
+    const { pageItems, hasMore } = splitPage(stories, limit)
+    return {
+      stories: pageItems.map(toHnItem),
+      nextCursor: hasMore
+        ? encodeTopCursor(pageItems[pageItems.length - 1])
+        : undefined,
+    }
   }
-  // hot
+
   const stories = await db.story.findMany({
     where,
-    orderBy: { createdAt: "desc" },
-    // Keep hot ranking over a bounded recent window for D1; this can become a stored rankScore later.
-    skip: 0,
-    take: Math.max(pageSize * 3, 120),
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: Math.max(limit * 3, HOT_WINDOW_SIZE),
     include: storyInclude,
   })
   const ranked = sortByHot(stories)
-  const pageSlice = ranked.slice(skip, skip + pageSize)
-  return pageSlice.map(toHnItem)
+  const cursorId = parseHotCursorId(cursor)
+  const cursorIndex =
+    cursorId === null ? -1 : ranked.findIndex((story) => story.id === cursorId)
+  const start = cursorIndex >= 0 ? cursorIndex + 1 : 0
+  const pageItems = ranked.slice(start, start + limit)
+  const lastItem = pageItems[pageItems.length - 1]
+
+  return {
+    stories: pageItems.map(toHnItem),
+    nextCursor:
+      lastItem && start + limit < ranked.length
+        ? encodeHotCursor(lastItem)
+        : undefined,
+  }
 }
 
-export async function searchStories({
+const listCachedStories = unstable_cache(
+  async (
+    storyType: StoryTypeParam,
+    pageSize: number,
+    order: PublicStoryOrder,
+    cursor?: string
+  ) => listStoriesUncached({ storyType, pageSize, order, cursor }),
+  ["public-story-feed"],
+  { revalidate: PUBLIC_FEED_REVALIDATE_SECONDS, tags: [PUBLIC_FEED_CACHE_TAG] }
+)
+
+export async function listStories({
+  storyType,
+  pageSize = 30,
+  order = "hot",
+  cursor,
+}: {
+  storyType: StoryTypeParam
+  pageSize?: number
+  order?: PublicStoryOrder
+  cursor?: string
+}) {
+  return listCachedStories(
+    storyType,
+    normalizePageSize(pageSize),
+    order,
+    cursor
+  )
+}
+
+async function searchStoriesUncached({
   query,
-  page = 1,
   pageSize = 30,
   sort,
+  cursor,
 }: {
   query: string
-  page?: number
   pageSize?: number
   sort?: string
-}) {
+  cursor?: string
+}): Promise<StoryPage> {
   const trimmedQuery = query.trim()
   if (!trimmedQuery) {
-    return []
+    return { stories: [] }
   }
 
+  const limit = normalizePageSize(pageSize)
   const contains = { contains: trimmedQuery }
   const where: Prisma.StoryWhereInput = {
     OR: [
@@ -144,21 +296,54 @@ export async function searchStories({
       { comments: { some: { text: contains } } },
     ],
   }
-  const skip = (page - 1) * pageSize
+  const searchOrder: SearchOrder = sort === "byDate" ? "date" : "score"
+  const cursorWhere =
+    searchOrder === "date" ? parseNewCursor(cursor) : parseTopCursor(cursor)
   const orderBy: Prisma.StoryOrderByWithRelationInput[] =
-    sort === "byDate"
-      ? [{ createdAt: "desc" }]
-      : [{ score: "desc" }, { createdAt: "desc" }]
+    searchOrder === "date"
+      ? [{ createdAt: "desc" }, { id: "desc" }]
+      : [{ score: "desc" }, { createdAt: "desc" }, { id: "desc" }]
 
   const db = await getDb()
   const stories = await db.story.findMany({
-    where,
+    where: andWhere(where, cursorWhere),
     orderBy,
-    skip,
-    take: pageSize,
+    take: limit + 1,
     include: storyInclude,
   })
-  return stories.map(toHnItem)
+  const { pageItems, hasMore } = splitPage(stories, limit)
+  return {
+    stories: pageItems.map(toHnItem),
+    nextCursor: hasMore
+      ? searchOrder === "date"
+        ? encodeNewCursor(pageItems[pageItems.length - 1])
+        : encodeTopCursor(pageItems[pageItems.length - 1])
+      : undefined,
+  }
+}
+
+const searchCachedStories = unstable_cache(
+  async (query: string, pageSize: number, sort?: string, cursor?: string) =>
+    searchStoriesUncached({ query, pageSize, sort, cursor }),
+  ["public-story-search"],
+  {
+    revalidate: PUBLIC_FEED_REVALIDATE_SECONDS,
+    tags: [PUBLIC_SEARCH_CACHE_TAG],
+  }
+)
+
+export async function searchStories({
+  query,
+  pageSize = 30,
+  sort,
+  cursor,
+}: {
+  query: string
+  pageSize?: number
+  sort?: string
+  cursor?: string
+}) {
+  return searchCachedStories(query, normalizePageSize(pageSize), sort, cursor)
 }
 
 export async function getStory(id: number): Promise<HnItem | null> {

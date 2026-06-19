@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { currentUser } from "@clerk/nextjs/server"
 
+import { getOptionalCurrentUser } from "@/lib/auth"
 import { listUserFavoriteStories } from "@/lib/data"
 import { hnItem2HnWebStory } from "@/lib/hn-item-utils"
 import Loading from "@/components/loading"
@@ -48,7 +48,7 @@ async function FavoriteComments({ userId }: { userId: string }) {
 async function FavoriteSubmissions({ userId }: { userId: string }) {
   const stories = await listUserFavoriteStories(userId)
   const storyList = stories.map(hnItem2HnWebStory)
-  const loginUser = await currentUser()
+  const loginUser = await getOptionalCurrentUser()
   const loginUserId = loginUser?.username || loginUser?.id
   const moreLink = ""
   return (

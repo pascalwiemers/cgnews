@@ -1,7 +1,7 @@
 import Link from "next/link"
-import { currentUser } from "@clerk/nextjs/server"
 
 import { deleteCommentAction } from "@/lib/actions"
+import { getOptionalCurrentUser } from "@/lib/auth"
 import { listStoryComments, StoryComment } from "@/lib/data"
 import { HnItem } from "@/lib/hn-types"
 import { timeAgo } from "@/lib/time-utils"
@@ -17,7 +17,7 @@ export default async function Comments({
   ids: number[]
 }) {
   const comments = await listStoryComments(story.id)
-  const cu = await currentUser()
+  const cu = await getOptionalCurrentUser()
   const myId = cu?.username || cu?.id
   if (!comments.length) {
     return <div className="text-sm text-muted-foreground">No comments yet.</div>

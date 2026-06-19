@@ -7,7 +7,7 @@ import ItemList from "@/components/item-list"
 import Loading from "@/components/loading"
 
 type Props = {
-  searchParams: { query?: string; sort?: string; page?: string }
+  searchParams: { query?: string; sort?: string; cursor?: string }
 }
 
 export async function generateMetadata(
@@ -25,14 +25,16 @@ export default async function Page({ searchParams }: Props) {
   if (!query) {
     notFound()
   }
-  const page = Number(searchParams.page) || 1
   const pageSize = 30
   return (
-    <Suspense key={`${query}_${page}_${pageSize}`} fallback={<Loading />}>
+    <Suspense
+      key={`${query}_${searchParams.cursor || "first"}_${pageSize}`}
+      fallback={<Loading />}
+    >
       <SearchResult
         query={query}
         sort={searchParams.sort}
-        page={page}
+        cursor={searchParams.cursor}
         pageSize={pageSize}
       />
     </Suspense>
@@ -42,32 +44,26 @@ export default async function Page({ searchParams }: Props) {
 async function SearchResult({
   query,
   sort,
-  page,
+  cursor,
   pageSize,
 }: {
   query: string
   sort?: string
-  page: number
+  cursor?: string
   pageSize: number
 }) {
-  const searchItemList = await searchStories({
+  const { stories, nextCursor } = await searchStories({
     query,
-    page,
     pageSize,
     sort,
+    cursor,
   })
 
   const moreLink =
-    searchItemList.length < pageSize
+    stories.length < pageSize || !nextCursor
       ? ""
-      : `/search?query=${encodeURIComponent(query)}&page=${page + 1}${
+      : `/search?query=${encodeURIComponent(query)}&cursor=${encodeURIComponent(nextCursor)}${
           sort ? `&sort=${encodeURIComponent(sort)}` : ""
         }`
-  return (
-    <ItemList
-      stories={searchItemList}
-      moreLink={moreLink}
-      offset={(page - 1) * pageSize}
-    />
-  )
+  return <ItemList stories={stories} moreLink={moreLink} />
 }

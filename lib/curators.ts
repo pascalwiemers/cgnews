@@ -2,6 +2,7 @@ import "server-only"
 
 import { auth, currentUser } from "@clerk/nextjs/server"
 
+import { hasClerkSessionCookie } from "@/lib/auth"
 import { getDb } from "@/lib/db"
 
 export const CURATOR_NOTE_MAX_LENGTH = 500
@@ -20,6 +21,7 @@ export function isCuratorClerkId(clerkId?: string | null) {
 }
 
 export async function isCurator() {
+  if (!hasClerkSessionCookie()) return false
   const { userId } = await auth()
   return isCuratorClerkId(userId)
 }

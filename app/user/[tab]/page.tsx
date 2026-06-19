@@ -1,9 +1,9 @@
 import { Metadata, ResolvingMetadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import { currentUser } from "@clerk/nextjs/server"
 import { CakeSlice } from "lucide-react"
 
 import { profileTabs } from "@/config/conf"
+import { getOptionalCurrentUser } from "@/lib/auth"
 import { getDb } from "@/lib/db"
 import { formatDate } from "@/lib/time-utils"
 import { Separator } from "@/components/ui/separator"
@@ -53,7 +53,7 @@ type ProfileUser = {
 }
 
 export default async function TabPage({ params, searchParams }: Props) {
-  const cu = await currentUser()
+  const cu = await getOptionalCurrentUser()
   const target = searchParams.id || cu?.username || cu?.id
   const db = await getDb()
   let local = target

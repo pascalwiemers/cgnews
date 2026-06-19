@@ -18,7 +18,9 @@ declare global {
 }
 
 const prismaLog: Prisma.LogLevel[] =
-  process.env.NODE_ENV === "development" ? ["query", "warn", "error"] : ["error"]
+  process.env.NODE_ENV === "development"
+    ? ["query", "warn", "error"]
+    : ["error"]
 
 function canUseLocalDbFallback() {
   const requestedRuntime = process.env.CGNEWS_DB_RUNTIME as string | undefined
@@ -29,7 +31,10 @@ function canUseLocalDbFallback() {
 function localSqliteUrl() {
   const databaseUrl = process.env.DATABASE_URL || "file:./dev.db"
 
-  if (databaseUrl.startsWith("file:./") && !databaseUrl.startsWith("file:./prisma/")) {
+  if (
+    databaseUrl.startsWith("file:./") &&
+    !databaseUrl.startsWith("file:./prisma/")
+  ) {
     return `file:./prisma/${databaseUrl.slice("file:./".length)}`
   }
 
@@ -37,13 +42,15 @@ function localSqliteUrl() {
 }
 
 export async function createLocalDbClient() {
-  const dynamicImport = new Function("specifier", "return import(specifier)") as (
-    specifier: string
-  ) => Promise<LibSqlAdapterModule | NodePrismaModule>
-  const [{ PrismaLibSQL }, { PrismaClient: NodePrismaClient }] = (await Promise.all([
-    dynamicImport("@prisma/adapter-libsql"),
-    dynamicImport("@prisma/client"),
-  ])) as [LibSqlAdapterModule, NodePrismaModule]
+  const dynamicImport = new Function(
+    "specifier",
+    "return import(specifier)"
+  ) as (specifier: string) => Promise<LibSqlAdapterModule | NodePrismaModule>
+  const [{ PrismaLibSQL }, { PrismaClient: NodePrismaClient }] =
+    (await Promise.all([
+      dynamicImport("@prisma/adapter-libsql"),
+      dynamicImport("@prisma/client"),
+    ])) as [LibSqlAdapterModule, NodePrismaModule]
   const adapter = new PrismaLibSQL({ url: localSqliteUrl() })
   return new NodePrismaClient({ adapter, log: prismaLog }) as DbClient
 }
@@ -56,15 +63,15 @@ export async function getLocalDb() {
 }
 
 async function getD1Binding() {
+  if (canUseLocalDbFallback()) {
+    return null
+  }
+
   let context: Awaited<ReturnType<typeof getCloudflareContext>>
 
   try {
     context = await getCloudflareContext({ async: true })
   } catch (error) {
-    if (canUseLocalDbFallback()) {
-      return null
-    }
-
     throw error
   }
 

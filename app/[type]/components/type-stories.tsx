@@ -1,32 +1,41 @@
-export const dynamic = "force-dynamic"
+import { listStories } from "@/lib/data"
 import { HnStoryType } from "@/lib/hn-types"
 import ItemList from "@/components/item-list"
-import { listStories } from "@/lib/data"
 
 export default async function TypeStories({
   pathname,
   storyType,
-  page = 1,
+  cursor,
   pageSize = 30,
 }: {
-  page?: number
+  cursor?: string
   pageSize?: number
   storyType: HnStoryType
   pathname: string
 }) {
   const limit = pageSize || 30
-  const offset = (page - 1) * limit
   const order =
     storyType === HnStoryType.newstories
       ? "new"
       : storyType === HnStoryType.beststories
-      ? "top"
-      : "hot"
-  const stories = await listStories({ storyType, page, pageSize: limit, order })
+        ? "top"
+        : "hot"
+  const { stories, nextCursor } = await listStories({
+    storyType,
+    pageSize: limit,
+    order,
+    cursor,
+  })
 
   const searchParams = new URLSearchParams()
-  searchParams.set("page", (+page + 1).toString())
+  if (nextCursor) {
+    searchParams.set("cursor", nextCursor)
+  }
 
-  const moreLink = stories.length < limit ? "" : `/${pathname}?${searchParams.toString()}`
-  return <ItemList stories={stories} offset={offset} moreLink={moreLink} />
+  const path = pathname ? `/${pathname}` : "/"
+  const moreLink =
+    stories.length < limit || !nextCursor
+      ? ""
+      : `${path}?${searchParams.toString()}`
+  return <ItemList stories={stories} moreLink={moreLink} />
 }

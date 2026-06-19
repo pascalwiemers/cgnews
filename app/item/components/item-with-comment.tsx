@@ -1,11 +1,11 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { currentUser } from "@clerk/nextjs/server"
 
 import {
   updateCuratorNoteAction,
   updateFeaturedStoryAction,
 } from "@/lib/actions"
+import { getOptionalCurrentUser } from "@/lib/auth"
 import { CURATOR_NOTE_MAX_LENGTH, isCurator } from "@/lib/curators"
 import { getStory } from "@/lib/data"
 import { commentCount, replyableStroy } from "@/lib/hn-item-utils"
@@ -38,7 +38,10 @@ export default async function ItemWithComment({
   if (!story) {
     notFound()
   }
-  const [clerkUser, curator] = await Promise.all([currentUser(), isCurator()])
+  const [clerkUser, curator] = await Promise.all([
+    getOptionalCurrentUser(),
+    isCurator(),
+  ])
   return (
     <div className="flex flex-col justify-start space-y-3">
       <div>

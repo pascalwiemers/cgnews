@@ -1,7 +1,11 @@
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { NextResponse } from "next/server"
 import { auth, currentUser } from "@clerk/nextjs/server"
 
+import {
+  PUBLIC_FEED_CACHE_TAG,
+  PUBLIC_SEARCH_CACHE_TAG,
+} from "@/lib/cache-tags"
 import { getDb } from "@/lib/db"
 import { parseSubmitStoryForm, storyTypeFeedPath } from "@/lib/submit-story"
 
@@ -67,6 +71,8 @@ export async function POST(req: Request) {
     revalidatePath(dest)
     revalidatePath("/")
     revalidatePath("/user/submitted")
+    revalidateTag(PUBLIC_FEED_CACHE_TAG)
+    revalidateTag(PUBLIC_SEARCH_CACHE_TAG)
 
     return NextResponse.redirect(new URL(dest, req.url))
   } catch (e) {

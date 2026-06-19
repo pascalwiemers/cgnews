@@ -1,9 +1,13 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth, currentUser } from "@clerk/nextjs/server"
 
+import {
+  PUBLIC_FEED_CACHE_TAG,
+  PUBLIC_SEARCH_CACHE_TAG,
+} from "@/lib/cache-tags"
 import {
   getOrCreateCuratorUser,
   normalizeCuratorNote,
@@ -24,6 +28,11 @@ const goto = (path: string | FormData) => {
   }
   revalidatePath(target.substring(0, target.lastIndexOf("?")))
   redirect(target)
+}
+
+const revalidatePublicStoryCaches = () => {
+  revalidateTag(PUBLIC_FEED_CACHE_TAG)
+  revalidateTag(PUBLIC_SEARCH_CACHE_TAG)
 }
 
 const trimProfileText = (
@@ -184,6 +193,7 @@ export const replyAction = async ({
   // Ensure the item page re-renders with fresh comments
   try {
     revalidatePath("/item")
+    revalidatePublicStoryCaches()
   } catch (_) {}
   return { success: true }
 }
@@ -215,6 +225,7 @@ export const voteAction = async (storyId: number, how: VoteStatus) => {
     })
   }
   revalidatePath("/user/upvoted")
+  revalidatePublicStoryCaches()
   return { success: true }
 }
 
@@ -301,6 +312,7 @@ export const submitStoryAction = async (formData: FormData) => {
   revalidatePath(destination)
   revalidatePath("/")
   revalidatePath("/user/submitted")
+  revalidatePublicStoryCaches()
   redirect(destination)
 }
 
@@ -327,6 +339,7 @@ export const updateCuratorNoteAction = async (formData: FormData) => {
     },
   })
   revalidatePath("/item")
+  revalidatePublicStoryCaches()
   return { success: true }
 }
 
@@ -355,6 +368,7 @@ export const updateFeaturedStoryAction = async (formData: FormData) => {
   })
   revalidatePath("/item")
   revalidatePath("/")
+  revalidatePublicStoryCaches()
   return { success: true }
 }
 
@@ -386,6 +400,7 @@ export const deleteCommentAction = async (formData: FormData) => {
   })
   try {
     revalidatePath("/item")
+    revalidateTag(PUBLIC_SEARCH_CACHE_TAG)
   } catch (_) {}
   return { success: true }
 }

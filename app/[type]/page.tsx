@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic"
 import { Metadata, ResolvingMetadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -7,7 +6,7 @@ import TypePage from "@/app/[type]/components/type-page"
 
 type Props = {
   params: { type: string }
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: { cursor?: string | string[]; page?: string | string[] }
 }
 
 export async function generateMetadata(
@@ -21,7 +20,9 @@ export async function generateMetadata(
 }
 
 export default async function Page({ searchParams, params }: Props) {
-  const currentPage = Number(searchParams?.page) || 1
+  const cursor = Array.isArray(searchParams.cursor)
+    ? searchParams.cursor[0]
+    : searchParams.cursor
   const pathname = params.type || "top"
   const navItem = storyFeedNavConfig.filter(
     (navItem) => navItem.name.toLowerCase() === pathname
@@ -30,11 +31,5 @@ export default async function Page({ searchParams, params }: Props) {
   if (!storyType) {
     notFound()
   }
-  return (
-    <TypePage
-      pathname={pathname}
-      storyType={storyType}
-      currentPage={currentPage}
-    />
-  )
+  return <TypePage pathname={pathname} storyType={storyType} cursor={cursor} />
 }

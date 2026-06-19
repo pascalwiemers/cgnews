@@ -1,4 +1,3 @@
-export const dynamic = "force-dynamic"
 import { Suspense } from "react"
 
 import { HnStoryType } from "@/lib/hn-types"
@@ -8,21 +7,21 @@ import TypeStories from "@/app/[type]/components/type-stories"
 export default function TypePage({
   pathname,
   storyType,
-  currentPage,
+  cursor,
 }: {
   pathname: string
   storyType: HnStoryType
-  currentPage: number
+  cursor?: string
 }) {
   return (
     <>
       <Suspense
-        key={storyType + currentPage}
+        key={`${storyType}-${cursor || "first"}`}
         fallback={<ItemSkeleton length={6} />}
       >
         <TypeStories
           pathname={pathname}
-          page={currentPage}
+          cursor={cursor}
           storyType={storyType}
           pageSize={30}
         />

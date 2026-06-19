@@ -1,17 +1,16 @@
-export const dynamic = "force-dynamic"
 import { HnStoryType } from "@/lib/hn-types"
 import TypePage from "@/app/[type]/components/type-page"
 
 export default function Page({
   searchParams,
 }: {
-  searchParams: { page: number }
+  searchParams: { cursor?: string }
 }) {
   return (
     <TypePage
       pathname={""}
       storyType={HnStoryType.topstories}
-      currentPage={searchParams.page || 1}
+      cursor={searchParams.cursor}
     />
   )
 }

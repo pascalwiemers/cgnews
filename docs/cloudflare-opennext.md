@@ -58,8 +58,42 @@ pnpm exec wrangler d1 create cgnews
 - `CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false node_modules/.bin/wrangler dev --port 8788 --local`
   - Starts Wrangler with the local D1 binding from `wrangler.jsonc`.
   - `GET /` returns `200 OK` with `x-opennext: 1`.
-- `CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false node_modules/.bin/wrangler deploy --dry-run --outdir /tmp/cgnews-worker-dryrun`
-  - Passes and emits the bundled `query_compiler_bg.wasm` asset.
+- `CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false node_modules/.bin/wrangler deploy --dry-run --outdir /tmp/cgnews-worker-dryrun-k`
+  - Passes after `cf:build:unsafe`; Wrangler reports a 7,561.16 KiB upload
+    and 1,947.33 KiB gzip size with the `DB` D1 binding present.
+
+## D1 Cost/Performance Notes
+
+- Public story feeds use cursor pagination instead of D1 `skip`/offset paging.
+  - New/date feeds order by `createdAt, id` and fetch `pageSize + 1`.
+  - Top/best feeds and default search order by `score, createdAt, id` and fetch
+    `pageSize + 1`.
+  - Hot feeds keep the existing transparent `sortByHot` ranking, but only over a
+    bounded recent window and cursor within that ranked window. If hot feed depth
+    or traffic grows, the next step should be a stored/cached `rankScore`
+    updated on submit/vote/comment/curator events rather than widening the D1
+    read window.
+- Anonymous public feed/search results are cached at the data layer for 60
+  seconds through `unstable_cache` and explicit public feed/search tags. Public
+  story mutations invalidate those tags. The root layout remains dynamic for
+  Clerk's provider, so this is not full static HTML caching.
+- The root layout no longer calls Clerk `currentUser()` for every render. The
+  header resolves logged-in UI client-side, and public item/profile components
+  skip Clerk server lookups when the request has no Clerk cookie.
+- The D1 indexes are aligned with the request paths: public feed cursors,
+  type-filtered feeds, author/user activity lists, comment thread order, and
+  vote/favorite activity.
+- Dry-run deploys do not execute Worker requests, so they do not report D1
+  row-read/write counts or Worker CPU. The current dry-run bundle is 7,561.16
+  KiB uploaded and 1,947.33 KiB gzip. On cache misses, the bounded query shape
+  is now `pageSize + 1` rows for cursor feeds/search and at most the configured
+  hot window for hot ranking before relation/count reads. Cache hits should avoid
+  the D1 feed/search reads entirely.
+- Search still uses Prisma `contains` filters across story text and comment
+  text. The added title/url/order indexes help ordering and narrower future
+  search modes, but broad substring search can still scan as content grows. The
+  D1-friendly follow-up is an FTS/cached search table, not more `contains`
+  filters on the hot path.
 
 ## Known Blockers
 
