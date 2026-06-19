@@ -34,14 +34,14 @@ export async function POST(req: Request) {
       console.warn(`[api/submit] invalid payload`, { title, urlLen: url.length, textLen: text.length })
       return NextResponse.json({ success: false, error: "Invalid payload" }, { status: 400 })
     }
-    const type = url && url.length > 0 ? "NEW" : "ASK"
+    const type = url && url.length > 0 ? "LINK" : "ASK"
 
     const story = await prisma.story.create({
       data: { title, url: url || null, text: text || null, type: type as any, authorId: user.id },
     })
     console.log(`[api/submit] created story`, { storyId: story.id, type, authorId: user.id })
 
-    if (type === "NEW") {
+    if (type === "LINK") {
       revalidatePath("/new")
       revalidatePath("/")
     } else {
@@ -50,12 +50,11 @@ export async function POST(req: Request) {
     }
     revalidatePath("/user/submitted")
 
-    const dest = type === "NEW" ? "/new" : "/ask"
+    const dest = type === "LINK" ? "/new" : "/ask"
     return NextResponse.redirect(new URL(dest, req.url))
   } catch (e) {
     console.error(`[api/submit] error`, e)
     return NextResponse.json({ success: false, error: "Submit failed" }, { status: 500 })
   }
 }
-
 

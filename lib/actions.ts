@@ -126,7 +126,7 @@ export const submitStoryAction = async (formData: FormData) => {
     }
   }
   
-  const type = validatedUrl ? "NEW" : "ASK"
+  const type = validatedUrl ? "LINK" : "ASK"
   const story = await prisma.story.create({
     data: {
       title,

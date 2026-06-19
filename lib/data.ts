@@ -10,13 +10,17 @@ type StoryTypeParam =
 	| "showstories"
 	| "jobstories"
 
-const typeMap: Record<StoryTypeParam, string> = {
-	topstories: "TOP",
-	newstories: "NEW",
-	beststories: "BEST",
+type StoredStoryType = "LINK" | "ASK" | "SHOW" | "JOB"
+
+const typeMap: Partial<Record<StoryTypeParam, StoredStoryType>> = {
 	askstories: "ASK",
 	showstories: "SHOW",
 	jobstories: "JOB",
+}
+
+function storyWhere(storyType: StoryTypeParam) {
+	const type = typeMap[storyType]
+	return type ? { type } : {}
 }
 
 function toHnItem(story: any): HnItem {
@@ -48,9 +52,10 @@ export async function listStories({
 	order?: "hot" | "new" | "top"
 }) {
 	const skip = (page - 1) * pageSize
+	const where = storyWhere(storyType)
 	if (order === "new") {
 		const stories = await prisma.story.findMany({
-			where: { type: typeMap[storyType] as any },
+			where,
 			orderBy: { createdAt: "desc" },
 			skip,
 			take: pageSize,
@@ -60,7 +65,7 @@ export async function listStories({
 	}
 	if (order === "top") {
 		const stories = await prisma.story.findMany({
-			where: { type: typeMap[storyType] as any },
+			where,
 			orderBy: { score: "desc" },
 			skip,
 			take: pageSize,
@@ -70,7 +75,7 @@ export async function listStories({
 	}
 	// hot
 	const stories = await prisma.story.findMany({
-		where: { type: typeMap[storyType] as any },
+		where,
 		orderBy: { createdAt: "desc" },
 		// fetch a larger window then apply hot ranking client-side
 		skip: 0,
@@ -105,5 +110,4 @@ export async function listStoryComments(storyId: number) {
 		time: Math.floor(new Date(c.createdAt).getTime() / 1000),
 	}))
 }
-
 

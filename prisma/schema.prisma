@@ -14,51 +14,63 @@ datasource db {
 }
 
 model User {
-  id         String    @id @default(cuid())
-  clerkId    String    @unique
-  username   String    @unique
-  createdAt  DateTime  @default(now())
-  profile    Profile?
-  stories    Story[]
-  comments   Comment[]
-  votes      Vote[]
-  favorites  Favorite[]
+  id             String     @id @default(cuid())
+  clerkId        String     @unique
+  username       String     @unique
+  createdAt      DateTime   @default(now())
+  profile        Profile?
+  stories        Story[]
+  curatedStories Story[]    @relation("StoryCurator")
+  comments       Comment[]
+  votes          Vote[]
+  favorites      Favorite[]
 }
 
 model Profile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  about     String   @default("")
-  karma     Int      @default(0)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  about             String   @default("")
+  website           String?
+  discipline        String?
+  affiliationStatus String?
+  location          String?
+  timezone          String?
+  karma             Int      @default(0)
+  createdAt         DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id])
 }
 
 model Story {
-  id           Int        @id @default(autoincrement())
-  title        String
-  url          String?
-  text         String?
-  authorId     String
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
-  score        Int        @default(0)
-  descendants  Int        @default(0)
-  type         StoryType  @default(TOP)
-  author       User       @relation(fields: [authorId], references: [id])
-  comments     Comment[]
-  votes        Vote[]
-  favorites    Favorite[]
+  id                   Int        @id @default(autoincrement())
+  title                String
+  url                  String?
+  text                 String?
+  authorId             String
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  score                Int        @default(0)
+  descendants          Int        @default(0)
+  type                 StoryType  @default(LINK)
+  isSelfPromo          Boolean    @default(false)
+  commercialDisclosure String?
+  curatorNote          String?
+  featuredAt           DateTime?
+  curatorId            String?
+  author               User       @relation(fields: [authorId], references: [id])
+  curator              User?      @relation("StoryCurator", fields: [curatorId], references: [id])
+  comments             Comment[]
+  votes                Vote[]
+  favorites            Favorite[]
 
   @@index([createdAt])
   @@index([score])
   @@index([type])
+  @@index([featuredAt])
+  @@index([curatorId])
 }
 
 enum StoryType {
-  TOP
-  NEW
-  BEST
+  LINK
   ASK
   SHOW
   JOB
@@ -82,22 +94,22 @@ model Comment {
 }
 
 model Vote {
-  userId   String
-  storyId  Int
+  userId    String
+  storyId   Int
   createdAt DateTime @default(now())
-  user     User   @relation(fields: [userId], references: [id])
-  story    Story  @relation(fields: [storyId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  story     Story    @relation(fields: [storyId], references: [id])
 
   @@id([userId, storyId])
   @@index([storyId])
 }
 
 model Favorite {
-  userId   String
-  storyId  Int
+  userId    String
+  storyId   Int
   createdAt DateTime @default(now())
-  user     User   @relation(fields: [userId], references: [id])
-  story    Story  @relation(fields: [storyId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  story     Story    @relation(fields: [storyId], references: [id])
 
   @@id([userId, storyId])
   @@index([storyId])

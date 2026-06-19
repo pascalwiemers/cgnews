@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const { PrismaClient } = require('../lib/generated/prisma')
+const { PrismaClient } = require('@prisma/client')
 
 const prisma = new PrismaClient()
 
@@ -7,47 +7,89 @@ async function main() {
 	// Upsert a demo user
 	const user = await prisma.user.upsert({
 		where: { clerkId: 'seed_user_1' },
-		update: {},
+		update: {
+			profile: {
+				upsert: {
+					update: {
+						about: 'Lighting TD and CGNews seed curator.',
+						website: 'https://example.com/alice',
+						discipline: 'Lighting',
+						affiliationStatus: 'Studio artist',
+						location: 'Berlin, DE',
+						timezone: 'Europe/Berlin',
+						karma: 100,
+					},
+					create: {
+						about: 'Lighting TD and CGNews seed curator.',
+						website: 'https://example.com/alice',
+						discipline: 'Lighting',
+						affiliationStatus: 'Studio artist',
+						location: 'Berlin, DE',
+						timezone: 'Europe/Berlin',
+						karma: 100,
+					},
+				},
+			},
+		},
 		create: {
 			clerkId: 'seed_user_1',
 			username: 'alice',
-			profile: { create: { about: 'Seed user', karma: 100 } },
+			profile: {
+				create: {
+					about: 'Lighting TD and CGNews seed curator.',
+					website: 'https://example.com/alice',
+					discipline: 'Lighting',
+					affiliationStatus: 'Studio artist',
+					location: 'Berlin, DE',
+					timezone: 'Europe/Berlin',
+					karma: 100,
+				},
+			},
 		},
 	})
 
-	// Sample stories
+	const featuredAt = new Date()
 	const stories = [
 		{
-			title: 'Show CGNews: Minimal HN clone with Next.js',
-			url: 'https://example.com/cgnews',
+			title: 'OpenPBR 1.1 production notes from a hard-surface lookdev pass',
+			url: 'https://example.com/openpbr-lookdev-notes',
+			text: null,
+			type: 'LINK',
+			score: 42,
+			descendants: 11,
+			isSelfPromo: false,
+			curatorNote: 'Good practical notes for shader authors and lookdev artists.',
+			featuredAt,
+			curatorId: user.id,
+		},
+		{
+			title: 'Ask CGNews: How are small teams versioning Houdini caches?',
+			url: null,
+			text: 'We are trying to keep farm outputs reproducible without turning every sim cache into permanent storage. What naming and retention rules have held up for you?',
+			type: 'ASK',
+			score: 18,
+			descendants: 9,
+			isSelfPromo: false,
+		},
+		{
+			title: 'Show CGNews: A tiny USD scene diff viewer for shot reviews',
+			url: 'https://example.com/usd-scene-diff',
 			text: null,
 			type: 'SHOW',
+			score: 31,
+			descendants: 6,
+			isSelfPromo: true,
+			commercialDisclosure: 'Personal open-source project by the submitter.',
+		},
+		{
+			title: 'Pipeline TD for procedural environment tools',
+			url: 'https://example.com/jobs/pipeline-td-environments',
+			text: 'Remote-friendly role building Houdini and USD tooling for a mid-sized VFX team.',
+			type: 'JOB',
 			score: 12,
-			descendants: 2,
-		},
-		{
-			title: 'Ask CGNews: What stack are you using in 2025?',
-			url: null,
-			text: 'Share your current production stack and why.',
-			type: 'ASK',
-			score: 7,
-			descendants: 5,
-		},
-		{
-			title: 'Top: Neon + Prisma + Clerk starter',
-			url: 'https://example.com/neon-prisma-clerk',
-			text: null,
-			type: 'TOP',
-			score: 25,
-			descendants: 8,
-		},
-		{
-			title: 'New: Next.js RSC tips for data fetching',
-			url: 'https://example.com/rsc-tips',
-			text: null,
-			type: 'NEW',
-			score: 3,
-			descendants: 0,
+			descendants: 3,
+			isSelfPromo: true,
+			commercialDisclosure: 'Posted by the hiring studio.',
 		},
 	]
 
@@ -60,6 +102,11 @@ async function main() {
 				type: s.type,
 				score: s.score,
 				descendants: s.descendants,
+				isSelfPromo: s.isSelfPromo,
+				commercialDisclosure: s.commercialDisclosure,
+				curatorNote: s.curatorNote,
+				featuredAt: s.featuredAt,
+				curatorId: s.curatorId,
 				author: { connect: { id: user.id } },
 			},
 		})
@@ -76,5 +123,4 @@ main()
 	.finally(async () => {
 		await prisma.$disconnect()
 	})
-
 

@@ -1,6 +1,14 @@
 import { HnStoryType } from "@/lib/hn-types"
 
-export const storyNavConfig = [
+export type StoryFeedNavItem = {
+  name: string
+  link: string
+  type: HnStoryType
+}
+
+type NavItem = StoryFeedNavItem | { name: string; link: string }
+
+export const storyNavConfig: NavItem[] = [
   {
     name: "Top",
     link: "/top",
@@ -31,11 +39,15 @@ export const storyNavConfig = [
     link: "/jobs",
     type: HnStoryType.jobstories,
   },
-  // {
-  //   name: 'Submit',
-  //   link: '/submit',
-  // },
+  {
+    name: "Submit",
+    link: "/submit",
+  },
 ]
+
+export const storyFeedNavConfig = storyNavConfig.filter(
+  (item): item is StoryFeedNavItem => "type" in item
+)
 
 export const showStoryNav = (pathname: string) => {
   return !["/login", "/signup"].includes(pathname)
