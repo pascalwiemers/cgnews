@@ -1,11 +1,9 @@
 import { Suspense } from "react"
 import Link from "next/link"
+import { currentUser } from "@clerk/nextjs/server"
 
-import {
-  getFavoriteSubmissions,
-  getFavoriteThreads,
-} from "@/lib/hn-web-fetcher"
-import { getCurrentUserId } from "@/lib/session"
+import { listUserFavoriteStories } from "@/lib/data"
+import { hnItem2HnWebStory } from "@/lib/hn-item-utils"
 import Loading from "@/components/loading"
 import Story from "@/components/story"
 
@@ -38,32 +36,21 @@ export default function TabFavorites({
 }
 
 async function FavoriteComments({ userId }: { userId: string }) {
-  const { comments, moreLink } = await getFavoriteThreads(userId)
   return (
     <div className="pt-2">
-      {comments.map((comment, i) => (
-        <div key={comment.id} className="mb-1">
-          <Thread key={comment.id} comment={comment} />
-        </div>
-      ))}
-      <div className="py-3">
-        {moreLink && (
-          <Link
-            rel="noreferrer nofollow"
-            className="text-sm underline"
-            href={`/user/comments?id=${userId}&${moreLink}`}
-          >
-            More
-          </Link>
-        )}
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Comment favorites are not available yet.
+      </p>
     </div>
   )
 }
 
 async function FavoriteSubmissions({ userId }: { userId: string }) {
-  const { storyList, moreLink } = await getFavoriteSubmissions(userId)
-  const loginUserId = getCurrentUserId()
+  const stories = await listUserFavoriteStories(userId)
+  const storyList = stories.map(hnItem2HnWebStory)
+  const loginUser = await currentUser()
+  const loginUserId = loginUser?.username || loginUser?.id
+  const moreLink = ""
   return (
     <div>
       {storyList.map((story, i) => (

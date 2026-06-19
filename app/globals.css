@@ -103,7 +103,7 @@ pre {
   @apply underline;
 }
 
-/* Hacker News inspired styling */
+/* Compact story-list styling */
 .hn-story-link {
   text-decoration: none;
 }

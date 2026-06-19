@@ -3,8 +3,6 @@ This is CGNews built with [Next.js](https://nextjs.org/) and [shadcn/ui](https:/
 
 ![index](./screenshots/desktop/index.png)
 
-<p style="text-align: center;"><a target="_blank" href="https://nextjs-hackernews-omega.vercel.app">Live Demo</a></p>
-
 ## Features
 
 - Next.js App Router
@@ -12,8 +10,8 @@ This is CGNews built with [Next.js](https://nextjs.org/) and [shadcn/ui](https:/
 - Server Actions for mutations
 - Beautifully designed components from shadcn/ui
 - Styling with Tailwind CSS
-- Browse stories: Top, Newest, Best, Show, Ask, Jobs.
-- Search for stories.
+- Browse CG/VFX stories: Top, New, Best, Show, Ask, Jobs.
+- Search local CGNews stories.
 - User authentication: Create an account and log in with Clerk to access personalized features.
 - Mark stories as favorite.
 - Upvote stories or comments.
@@ -84,9 +82,9 @@ Requires Node.js 18.17 or later.
 
 0. Clone the project.
 ```bash
-git clone https://github.com/WhiteDG/nextjs-hackernews.git
+git clone <cgnews-repository-url>
 
-cd nextjs-hackernews
+cd cgnews
 ```
 
 1. Install dependencies.
@@ -125,9 +123,8 @@ pnpm start
 ```
 
 ## APIs
-This project leverages the power of various APIs to provide an enriched user experience:
-This project originally used HN APIs; CGNews now uses Neon (Postgres) + Prisma for data and Clerk for auth.
+CGNews uses Neon (Postgres) + Prisma for community stories, comments, votes, and favorites. Clerk provides authentication.
 
 
 ## License
-Licensed under the [MIT license](https://github.com/WhiteDG/nextjs-hackernews/blob/main/LICENSE).
+Licensed under the MIT license.

@@ -2,12 +2,12 @@ import { Suspense } from "react"
 import { Metadata, ResolvingMetadata } from "next"
 import { notFound } from "next/navigation"
 
-import { search } from "@/lib/hn-algolia-fetcher"
+import { searchStories } from "@/lib/data"
 import ItemList from "@/components/item-list"
 import Loading from "@/components/loading"
 
 type Props = {
-  searchParams: { query?: string; sort?: string; page?: number }
+  searchParams: { query?: string; sort?: string; page?: string }
 }
 
 export async function generateMetadata(
@@ -25,7 +25,7 @@ export default async function Page({ searchParams }: Props) {
   if (!query) {
     notFound()
   }
-  const page = searchParams.page || 1
+  const page = Number(searchParams.page) || 1
   const pageSize = 30
   return (
     <Suspense key={`${query}_${page}_${pageSize}`} fallback={<Loading />}>
@@ -50,18 +50,19 @@ async function SearchResult({
   page: number
   pageSize: number
 }) {
-  const searchItemList = await search({
+  const searchItemList = await searchStories({
     query,
     page,
     pageSize,
-    tags: "story",
     sort,
   })
 
   const moreLink =
     searchItemList.length < pageSize
       ? ""
-      : `search?query=${query}&page=${+page + 1}`
+      : `/search?query=${encodeURIComponent(query)}&page=${page + 1}${
+          sort ? `&sort=${encodeURIComponent(sort)}` : ""
+        }`
   return (
     <ItemList
       stories={searchItemList}

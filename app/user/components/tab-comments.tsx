@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
 
-import { getThreads } from "@/lib/hn-web-fetcher"
+import { listUserCommentThreads } from "@/lib/data"
 import Loading from "@/components/loading"
 
 import Thread from "./thread"
@@ -21,7 +21,8 @@ export default function TabComments(searchParams: {
 }
 
 async function Threads({ userId, next }: { userId: string; next: number }) {
-  const { comments, moreLink } = await getThreads(userId, next)
+  const comments = await listUserCommentThreads(userId)
+  const moreLink = ""
   return (
     <div>
       {comments.map((comment, i) => (

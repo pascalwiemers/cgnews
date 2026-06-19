@@ -79,15 +79,14 @@ export const profileTabs = [
 export const siteConf = {
   title: "CGNews",
   description:
-    "CGNews — a community news site built with TypeScript, Next.js, and Shadcn/UI.",
+    "CGNews is a minimal community site for CG, VFX, animation, tools, and production work.",
   authors: [
     {
-      name: "White",
-      url: "https://github.com/WhiteDG",
+      name: "CGNews",
+      url: "https://www.pascalwiemers.com",
     },
   ],
   links: {
-    github: "https://github.com/WhiteDG/nextjs-hackernews",
     next: "https://nextjs.org",
     shadcn: "https://ui.shadcn.com",
   },

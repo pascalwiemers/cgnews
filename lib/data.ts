@@ -1,113 +1,224 @@
+import { Prisma } from "@prisma/client"
+
 import { prisma } from "./db"
-import { sortByHot } from "./ranking"
 import { HnItem, HnItemType } from "./hn-types"
+import { HnWebThread } from "./hn-web-types"
+import { sortByHot } from "./ranking"
+import { timeAgo } from "./time-utils"
 
 type StoryTypeParam =
-	| "topstories"
-	| "newstories"
-	| "beststories"
-	| "askstories"
-	| "showstories"
-	| "jobstories"
+  | "topstories"
+  | "newstories"
+  | "beststories"
+  | "askstories"
+  | "showstories"
+  | "jobstories"
 
 type StoredStoryType = "LINK" | "ASK" | "SHOW" | "JOB"
 
 const typeMap: Partial<Record<StoryTypeParam, StoredStoryType>> = {
-	askstories: "ASK",
-	showstories: "SHOW",
-	jobstories: "JOB",
+  askstories: "ASK",
+  showstories: "SHOW",
+  jobstories: "JOB",
 }
 
 function storyWhere(storyType: StoryTypeParam) {
-	const type = typeMap[storyType]
-	return type ? { type } : {}
+  const type = typeMap[storyType]
+  return type ? { type } : {}
 }
 
-function toHnItem(story: any): HnItem {
-	return {
-		id: story.id,
-		deleted: false,
-		type: HnItemType.story,
-		by: story.author.username,
-		time: Math.floor(new Date(story.createdAt).getTime() / 1000),
-		text: story.text ?? "",
-		dead: false,
-		parent: undefined,
-		url: story.url ?? "",
-		score: story.score ?? 0,
-		title: story.title,
-		descendants: story.descendants ?? story._count?.comments ?? 0,
-	}
+type StoryWithAuthor = Prisma.StoryGetPayload<{
+  include: {
+    author: { select: { username: true } }
+    _count: { select: { comments: true } }
+  }
+}>
+
+function toHnItem(story: StoryWithAuthor): HnItem {
+  return {
+    id: story.id,
+    deleted: false,
+    type: story.type === "JOB" ? HnItemType.job : HnItemType.story,
+    by: story.author.username,
+    time: Math.floor(new Date(story.createdAt).getTime() / 1000),
+    text: story.text ?? "",
+    dead: false,
+    parent: undefined,
+    url: story.url ?? "",
+    score: story.score ?? 0,
+    title: story.title,
+    descendants: story.descendants ?? story._count?.comments ?? 0,
+  }
 }
+
+const storyInclude = {
+  author: { select: { username: true } },
+  _count: { select: { comments: true } },
+} satisfies Prisma.StoryInclude
 
 export async function listStories({
-	storyType,
-	page = 1,
-	pageSize = 30,
-	order = "hot",
+  storyType,
+  page = 1,
+  pageSize = 30,
+  order = "hot",
 }: {
-	storyType: StoryTypeParam
-	page?: number
-	pageSize?: number
-	order?: "hot" | "new" | "top"
+  storyType: StoryTypeParam
+  page?: number
+  pageSize?: number
+  order?: "hot" | "new" | "top"
 }) {
-	const skip = (page - 1) * pageSize
-	const where = storyWhere(storyType)
-	if (order === "new") {
-		const stories = await prisma.story.findMany({
-			where,
-			orderBy: { createdAt: "desc" },
-			skip,
-			take: pageSize,
-			include: { author: { select: { username: true } }, _count: { select: { comments: true } } },
-		})
-		return stories.map(toHnItem)
-	}
-	if (order === "top") {
-		const stories = await prisma.story.findMany({
-			where,
-			orderBy: { score: "desc" },
-			skip,
-			take: pageSize,
-			include: { author: { select: { username: true } }, _count: { select: { comments: true } } },
-		})
-		return stories.map(toHnItem)
-	}
-	// hot
-	const stories = await prisma.story.findMany({
-		where,
-		orderBy: { createdAt: "desc" },
-		// fetch a larger window then apply hot ranking client-side
-		skip: 0,
-		take: Math.max(pageSize * 3, 120),
-		include: { author: { select: { username: true } }, _count: { select: { comments: true } } },
-	})
-	const ranked = sortByHot(stories)
-	const pageSlice = ranked.slice(skip, skip + pageSize)
-	return pageSlice.map(toHnItem)
+  const skip = (page - 1) * pageSize
+  const where = storyWhere(storyType)
+  if (order === "new") {
+    const stories = await prisma.story.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: pageSize,
+      include: storyInclude,
+    })
+    return stories.map(toHnItem)
+  }
+  if (order === "top") {
+    const stories = await prisma.story.findMany({
+      where,
+      orderBy: { score: "desc" },
+      skip,
+      take: pageSize,
+      include: storyInclude,
+    })
+    return stories.map(toHnItem)
+  }
+  // hot
+  const stories = await prisma.story.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    // fetch a larger window then apply hot ranking client-side
+    skip: 0,
+    take: Math.max(pageSize * 3, 120),
+    include: storyInclude,
+  })
+  const ranked = sortByHot(stories)
+  const pageSlice = ranked.slice(skip, skip + pageSize)
+  return pageSlice.map(toHnItem)
 }
 
+export async function searchStories({
+  query,
+  page = 1,
+  pageSize = 30,
+  sort,
+}: {
+  query: string
+  page?: number
+  pageSize?: number
+  sort?: string
+}) {
+  const trimmedQuery = query.trim()
+  if (!trimmedQuery) {
+    return []
+  }
+
+  const contains = { contains: trimmedQuery, mode: "insensitive" as const }
+  const where: Prisma.StoryWhereInput = {
+    OR: [
+      { title: contains },
+      { url: contains },
+      { text: contains },
+      { curatorNote: contains },
+      { commercialDisclosure: contains },
+      { comments: { some: { text: contains } } },
+    ],
+  }
+  const skip = (page - 1) * pageSize
+  const orderBy: Prisma.StoryOrderByWithRelationInput[] =
+    sort === "byDate"
+      ? [{ createdAt: "desc" }]
+      : [{ score: "desc" }, { createdAt: "desc" }]
+
+  const stories = await prisma.story.findMany({
+    where,
+    orderBy,
+    skip,
+    take: pageSize,
+    include: storyInclude,
+  })
+  return stories.map(toHnItem)
+}
 
 export async function getStory(id: number): Promise<HnItem | null> {
-	const story = await prisma.story.findUnique({
-		where: { id },
-		include: { author: { select: { username: true } }, _count: { select: { comments: true } } },
-	})
-	if (!story) return null
-	return toHnItem(story)
+  const story = await prisma.story.findUnique({
+    where: { id },
+    include: storyInclude,
+  })
+  if (!story) return null
+  return toHnItem(story)
 }
 
 export async function listStoryComments(storyId: number) {
-	const comments = await prisma.comment.findMany({
-		where: { storyId },
-		orderBy: { createdAt: "asc" },
-		include: { author: { select: { username: true } } },
-	})
-	return comments.map((c) => ({
-		id: c.id,
-		by: c.author.username,
-		text: c.text,
-		time: Math.floor(new Date(c.createdAt).getTime() / 1000),
-	}))
+  const comments = await prisma.comment.findMany({
+    where: { storyId },
+    orderBy: { createdAt: "asc" },
+    include: { author: { select: { username: true } } },
+  })
+  return comments.map((c) => ({
+    id: c.id,
+    by: c.author.username,
+    text: c.text,
+    time: Math.floor(new Date(c.createdAt).getTime() / 1000),
+  }))
 }
 
+export async function resolveUserId(userId: string) {
+  const user = await prisma.user.findFirst({
+    where: { OR: [{ username: userId }, { clerkId: userId }] },
+    select: { id: true, username: true, clerkId: true },
+  })
+  return user
+}
+
+export async function listUserFavoriteStories(userId: string) {
+  const user = await resolveUserId(userId)
+  const favorites = user
+    ? await prisma.favorite.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        include: {
+          story: {
+            include: storyInclude,
+          },
+        },
+        take: 50,
+      })
+    : []
+
+  return favorites.map((favorite) => toHnItem(favorite.story))
+}
+
+export async function listUserCommentThreads(userId: string) {
+  const user = await resolveUserId(userId)
+  const comments = user
+    ? await prisma.comment.findMany({
+        where: { authorId: user.id },
+        orderBy: { createdAt: "desc" },
+        include: {
+          story: { select: { id: true, title: true } },
+        },
+        take: 50,
+      })
+    : []
+
+  return comments.map(
+    (comment): HnWebThread => ({
+      id: comment.id,
+      indent: 0,
+      age: `${timeAgo(Math.floor(new Date(comment.createdAt).getTime() / 1000))} ago`,
+      time: Math.floor(new Date(comment.createdAt).getTime() / 1000),
+      userId: user?.username || userId,
+      onStory: comment.story.title,
+      storyLink: `/item?id=${comment.story.id}`,
+      commentHtml: comment.text,
+      kids: [],
+    })
+  )
+}
