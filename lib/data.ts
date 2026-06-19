@@ -40,6 +40,7 @@ function toHnItem(story: StoryWithAuthor): HnItem {
     id: story.id,
     deleted: false,
     type: story.type === "JOB" ? HnItemType.job : HnItemType.story,
+    storyType: story.type,
     by: story.author.username,
     time: Math.floor(new Date(story.createdAt).getTime() / 1000),
     text: story.text ?? "",
@@ -54,6 +55,8 @@ function toHnItem(story: StoryWithAuthor): HnItem {
     featuredAt: story.featuredAt
       ? Math.floor(new Date(story.featuredAt).getTime() / 1000)
       : undefined,
+    isSelfPromo: story.isSelfPromo,
+    commercialDisclosure: story.commercialDisclosure,
   }
 }
 

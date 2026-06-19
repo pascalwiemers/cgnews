@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import Fave from "@/components/fave"
 import HtmlText from "@/components/html-text"
 import StoryBy from "@/components/story-by"
+import StoryDisclosureLabels from "@/components/story-disclosure-labels"
 import StoryPoint from "@/components/story-point"
 import StoryTime from "@/components/story-time"
 import StoryUrl from "@/components/story-url"
@@ -55,6 +56,10 @@ export default async function ItemWithComment({
             <StoryPoint score={story.score} />
             <StoryBy by={story.by} />
             <StoryTime time={story.time} />
+            <StoryDisclosureLabels
+              isSelfPromo={story.isSelfPromo}
+              commercialDisclosure={story.commercialDisclosure}
+            />
           </div>
           <Fave storyId={story.id} faved={faved} />
         </div>

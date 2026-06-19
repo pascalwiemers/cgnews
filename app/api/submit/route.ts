@@ -1,8 +1,9 @@
+import { revalidatePath } from "next/cache"
 import { NextResponse } from "next/server"
 import { auth, currentUser } from "@clerk/nextjs/server"
-import { revalidatePath } from "next/cache"
 
 import { prisma } from "@/lib/db"
+import { parseSubmitStoryForm, storyTypeFeedPath } from "@/lib/submit-story"
 
 export async function POST(req: Request) {
   const { userId: clerkId } = await auth()
@@ -22,39 +23,56 @@ export async function POST(req: Request) {
       const cUser = await currentUser()
       const desiredUsername = cUser?.username || clerkId
       if (desiredUsername && user.username !== desiredUsername) {
-        user = await prisma.user.update({ where: { id: user.id }, data: { username: desiredUsername } })
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { username: desiredUsername },
+        })
       }
     }
 
     const formData = await req.formData()
-    const title = String(formData.get("title") || "").trim()
-    const url = String(formData.get("url") || "").trim()
-    const text = String(formData.get("text") || "").trim()
+    const { title, url, text, type, isSelfPromo, commercialDisclosure } =
+      parseSubmitStoryForm(formData)
     if (!title || (!url && !text)) {
-      console.warn(`[api/submit] invalid payload`, { title, urlLen: url.length, textLen: text.length })
-      return NextResponse.json({ success: false, error: "Invalid payload" }, { status: 400 })
+      console.warn(`[api/submit] invalid payload`, {
+        title,
+        urlLen: url.length,
+        textLen: text.length,
+      })
+      return NextResponse.json(
+        { success: false, error: "Invalid payload" },
+        { status: 400 }
+      )
     }
-    const type = url && url.length > 0 ? "LINK" : "ASK"
 
     const story = await prisma.story.create({
-      data: { title, url: url || null, text: text || null, type: type as any, authorId: user.id },
+      data: {
+        title,
+        url: url || null,
+        text: text || null,
+        type: type as any,
+        isSelfPromo,
+        commercialDisclosure,
+        authorId: user.id,
+      },
     })
-    console.log(`[api/submit] created story`, { storyId: story.id, type, authorId: user.id })
+    console.log(`[api/submit] created story`, {
+      storyId: story.id,
+      type,
+      authorId: user.id,
+    })
 
-    if (type === "LINK") {
-      revalidatePath("/new")
-      revalidatePath("/")
-    } else {
-      revalidatePath("/ask")
-      revalidatePath("/")
-    }
+    const dest = storyTypeFeedPath(type)
+    revalidatePath(dest)
+    revalidatePath("/")
     revalidatePath("/user/submitted")
 
-    const dest = type === "LINK" ? "/new" : "/ask"
     return NextResponse.redirect(new URL(dest, req.url))
   } catch (e) {
     console.error(`[api/submit] error`, e)
-    return NextResponse.json({ success: false, error: "Submit failed" }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: "Submit failed" },
+      { status: 500 }
+    )
   }
 }
-

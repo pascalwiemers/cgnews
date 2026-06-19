@@ -2,8 +2,8 @@ import { Suspense } from "react"
 import Link from "next/link"
 
 import { prisma } from "@/lib/db"
+import { ago, points, site } from "@/lib/hn-item-utils"
 import { HnWebStory } from "@/lib/hn-web-types"
-import { points, site, ago } from "@/lib/hn-item-utils"
 import Loading from "@/components/loading"
 import Story from "@/components/story"
 
@@ -86,6 +86,7 @@ async function UpvotedSubmissions({ userId }: { userId: string }) {
       title: s.title,
       url: s.url || "",
       sitestr: site(s.url || undefined) || "",
+      storyType: s.type,
       score: points(s.score) || "0 points",
       by: s.author.username,
       age: ago(Math.floor(new Date(s.createdAt).getTime() / 1000)) || "",
@@ -93,6 +94,8 @@ async function UpvotedSubmissions({ userId }: { userId: string }) {
       comments: s.descendants ? `${s.descendants} comments` : "",
       dead: false,
       upvoted: true,
+      isSelfPromo: s.isSelfPromo,
+      commercialDisclosure: s.commercialDisclosure,
     }
   })
   const moreLink = ""

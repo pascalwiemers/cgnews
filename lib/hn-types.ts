@@ -15,10 +15,13 @@ export enum HnStoryType {
   jobstories = "jobstories",
 }
 
+export type StoredStoryType = "LINK" | "ASK" | "SHOW" | "JOB"
+
 export interface HnItem {
   id: number
   deleted?: boolean
   type?: HnItemType
+  storyType?: StoredStoryType
   by?: string
   time: number
   text?: string
@@ -34,6 +37,8 @@ export interface HnItem {
   curatorNote?: string
   curator?: string
   featuredAt?: number
+  isSelfPromo?: boolean
+  commercialDisclosure?: string | null
 }
 
 export interface HnComment extends HnItem {

@@ -3,12 +3,14 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { auth, currentUser } from "@clerk/nextjs/server"
-import { prisma } from "@/lib/db"
+
 import {
   getOrCreateCuratorUser,
   normalizeCuratorNote,
   requireCurator,
 } from "@/lib/curators"
+import { prisma } from "@/lib/db"
+import { parseSubmitStoryForm, storyTypeFeedPath } from "@/lib/submit-story"
 
 const goto = (path: string | FormData) => {
   let target: string = "/"
@@ -33,7 +35,9 @@ export const faveAction = async (storyId: number, faved: boolean) => {
       create: { userId: user.id, storyId },
     })
   } else {
-    await prisma.favorite.delete({ where: { userId_storyId: { userId: user.id, storyId } } }).catch(() => null)
+    await prisma.favorite
+      .delete({ where: { userId_storyId: { userId: user.id, storyId } } })
+      .catch(() => null)
   }
   revalidatePath("/user/favorites")
   return { success: true }
@@ -106,10 +110,18 @@ export const voteAction = async (storyId: number, how: VoteStatus) => {
       update: {},
       create: { userId: user.id, storyId },
     })
-    await prisma.story.update({ where: { id: storyId }, data: { score: { increment: 1 } } })
+    await prisma.story.update({
+      where: { id: storyId },
+      data: { score: { increment: 1 } },
+    })
   } else {
-    await prisma.vote.delete({ where: { userId_storyId: { userId: user.id, storyId } } }).catch(() => null)
-    await prisma.story.update({ where: { id: storyId }, data: { score: { decrement: 1 } } })
+    await prisma.vote
+      .delete({ where: { userId_storyId: { userId: user.id, storyId } } })
+      .catch(() => null)
+    await prisma.story.update({
+      where: { id: storyId },
+      data: { score: { decrement: 1 } },
+    })
   }
   revalidatePath("/user/upvoted")
   return { success: true }
@@ -145,11 +157,20 @@ export const submitStoryAction = async (formData: FormData) => {
     }
   } catch (_) {}
 
-  const title = String(formData.get("title") || "").trim()
-  const url = String(formData.get("url") || "").trim()
-  const text = String(formData.get("text") || "").trim()
+  const { title, url, text, type, isSelfPromo, commercialDisclosure } =
+    parseSubmitStoryForm(formData)
 
-  console.log(`[submitStoryAction] incoming`, { title, url, textLen: text.length, clerkId })
+  console.log(`[submitStoryAction] incoming`, {
+    title,
+    url,
+    textLen: text.length,
+    type,
+    clerkId,
+  })
+
+  if (!title || (!url && !text)) {
+    redirect(`/submit?error=Invalid payload`)
+  }
 
   // Validate URL if provided
   let validatedUrl: string | null = null
@@ -168,29 +189,27 @@ export const submitStoryAction = async (formData: FormData) => {
     }
   }
 
-  const type = validatedUrl ? "LINK" : "ASK"
   const story = await prisma.story.create({
     data: {
       title,
       url: validatedUrl,
       text: text || null,
       type: type as any,
+      isSelfPromo,
+      commercialDisclosure,
       authorId: user.id,
     },
   })
-  console.log(`[submitStoryAction] created story`, { storyId: story.id, type, authorId: user.id })
-  // Redirect to appropriate feed
-  if (validatedUrl) {
-    revalidatePath("/new")
-    revalidatePath("/")
-    revalidatePath("/user/submitted")
-    redirect(`/new`)
-  } else {
-    revalidatePath("/ask")
-    revalidatePath("/")
-    revalidatePath("/user/submitted")
-    redirect(`/ask`)
-  }
+  console.log(`[submitStoryAction] created story`, {
+    storyId: story.id,
+    type,
+    authorId: user.id,
+  })
+  const destination = storyTypeFeedPath(type)
+  revalidatePath(destination)
+  revalidatePath("/")
+  revalidatePath("/user/submitted")
+  redirect(destination)
 }
 
 export const updateCuratorNoteAction = async (formData: FormData) => {
@@ -261,11 +280,17 @@ export const deleteCommentAction = async (formData: FormData) => {
   if (!user) return { success: false, message: "User not found" }
   const comment = await prisma.comment.findUnique({ where: { id: commentId } })
   if (!comment) return { success: false, message: "Comment not found" }
-  if (comment.authorId !== user.id) return { success: false, message: "Forbidden" }
+  if (comment.authorId !== user.id)
+    return { success: false, message: "Forbidden" }
   const ageMs = Date.now() - new Date(comment.createdAt).getTime()
   const withinWindow = ageMs <= 2 * 60 * 60 * 1000
   if (!withinWindow) return { success: false, message: "Delete window expired" }
-  await prisma.comment.update({ where: { id: commentId }, data: { text: "[deleted]" } })
-  try { revalidatePath('/item') } catch (_) {}
+  await prisma.comment.update({
+    where: { id: commentId },
+    data: { text: "[deleted]" },
+  })
+  try {
+    revalidatePath("/item")
+  } catch (_) {}
   return { success: true }
 }

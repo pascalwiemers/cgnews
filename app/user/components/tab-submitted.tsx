@@ -1,12 +1,13 @@
-export const dynamic = "force-dynamic"
 import { Suspense } from "react"
 import Link from "next/link"
 
 import { prisma } from "@/lib/db"
+import { ago, points, site } from "@/lib/hn-item-utils"
 import { HnWebStory } from "@/lib/hn-web-types"
-import { points, site, ago } from "@/lib/hn-item-utils"
 import ItemSkeleton from "@/components/item-skeleton"
 import Story from "@/components/story"
+
+export const dynamic = "force-dynamic"
 
 export default function TabSubmitted(searchParams: {
   userId: string
@@ -55,12 +56,15 @@ async function Submitted({
     title: s.title,
     url: s.url || "",
     sitestr: site(s.url || undefined) || "",
+    storyType: s.type,
     score: points(s.score) || "0 points",
     by: user?.username || userId,
     age: ago(Math.floor(new Date(s.createdAt).getTime() / 1000)) || "",
     time: Math.floor(new Date(s.createdAt).getTime() / 1000),
     comments: s.descendants ? `${s.descendants} comments` : "",
     dead: false,
+    isSelfPromo: s.isSelfPromo,
+    commercialDisclosure: s.commercialDisclosure,
   }))
   const nextOffset = stories.length < pageSize ? undefined : skip + pageSize
   const moreLink = nextOffset !== undefined ? `next=${nextOffset}` : ""

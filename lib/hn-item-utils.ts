@@ -6,13 +6,13 @@ export const site = (url?: string) => {
   if (!url) {
     return ""
   }
-  
+
   try {
     // Check if the URL is valid before constructing it
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
       return ""
     }
-    
+
     let { host, pathname } = new URL(url)
     if (host === "github.com" && pathname.includes("/")) {
       host += pathname.substring(0, pathname.indexOf("/", 1))
@@ -63,11 +63,14 @@ export const hnItem2HnWebStory = (hnItem: HnItem) => {
     title: hnItem.title,
     url: hnItem.url,
     sitestr: site(hnItem.url),
+    storyType: hnItem.storyType,
     score: points(hnItem.score),
     by: hnItem.by,
     age: `${timeAgo(hnItem.time)} ago`,
     comments: commentCount(hnItem.descendants),
     dead: hnItem.dead,
+    isSelfPromo: hnItem.isSelfPromo,
+    commercialDisclosure: hnItem.commercialDisclosure,
   } as HnWebStory
 }
 

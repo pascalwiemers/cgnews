@@ -4,6 +4,7 @@ export interface HnWebStory {
   title: string
   url: string
   sitestr: string
+  storyType?: "LINK" | "ASK" | "SHOW" | "JOB"
   score: string
   by: string
   age: string
@@ -11,6 +12,8 @@ export interface HnWebStory {
   comments: string
   dead: boolean
   upvoted?: boolean
+  isSelfPromo?: boolean
+  commercialDisclosure?: string | null
 }
 
 export interface HnWebThread {
