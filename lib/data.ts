@@ -100,7 +100,7 @@ export async function listStories({
   const stories = await prisma.story.findMany({
     where,
     orderBy: { createdAt: "desc" },
-    // fetch a larger window then apply hot ranking client-side
+    // Keep hot ranking over a bounded recent window for D1; this can become a stored rankScore later.
     skip: 0,
     take: Math.max(pageSize * 3, 120),
     include: storyInclude,
