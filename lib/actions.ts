@@ -35,20 +35,57 @@ export const faveAction = async (storyId: number, faved: boolean) => {
 }
 
 export const replyAction = async ({
-  parent,
+  storyId,
+  parentId = null,
   text,
 }: {
-  parent: number
+  storyId: number
+  parentId?: number | null
   text: string
 }) => {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { success: false, message: "Not Login" }
+  if (!Number.isInteger(storyId) || storyId < 1)
+    return { success: false, message: "Invalid story" }
+  const normalizedParentId = parentId ?? null
+  if (
+    normalizedParentId !== null &&
+    (!Number.isInteger(normalizedParentId) || normalizedParentId < 1)
+  ) {
+    return { success: false, message: "Invalid parent comment" }
+  }
+  const trimmedText = text.trim()
+  if (!trimmedText)
+    return { success: false, message: "Please enter your comment" }
   const user = await prisma.user.findUnique({ where: { clerkId } })
   if (!user) return { success: false, message: "User not found" }
-  // parent is story id or comment id; assume story for now
-  await prisma.comment.create({ data: { storyId: parent, authorId: user.id, text } })
+
+  if (normalizedParentId) {
+    const parent = await prisma.comment.findFirst({
+      where: { id: normalizedParentId, storyId },
+      select: { id: true },
+    })
+    if (!parent) return { success: false, message: "Parent comment not found" }
+  }
+
+  await prisma.$transaction([
+    prisma.comment.create({
+      data: {
+        storyId,
+        parentId: normalizedParentId,
+        authorId: user.id,
+        text: trimmedText,
+      },
+    }),
+    prisma.story.update({
+      where: { id: storyId },
+      data: { descendants: { increment: 1 } },
+    }),
+  ])
   // Ensure the item page re-renders with fresh comments
-  try { revalidatePath('/item') } catch (_) {}
+  try {
+    revalidatePath("/item")
+  } catch (_) {}
   return { success: true }
 }
 
@@ -102,13 +139,13 @@ export const submitStoryAction = async (formData: FormData) => {
       })
     }
   } catch (_) {}
-  
+
   const title = String(formData.get("title") || "").trim()
   const url = String(formData.get("url") || "").trim()
   const text = String(formData.get("text") || "").trim()
-  
+
   console.log(`[submitStoryAction] incoming`, { title, url, textLen: text.length, clerkId })
-  
+
   // Validate URL if provided
   let validatedUrl: string | null = null
   if (url) {
@@ -125,7 +162,7 @@ export const submitStoryAction = async (formData: FormData) => {
       }
     }
   }
-  
+
   const type = validatedUrl ? "LINK" : "ASK"
   const story = await prisma.story.create({
     data: {

@@ -25,7 +25,8 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 
 const replyFormSchema = z.object({
-  parent: z.number(),
+  storyId: z.number().int().positive(),
+  parentId: z.number().int().positive().nullable(),
   text: z
     .string({
       required_error: "Please enter your comment",
@@ -38,29 +39,37 @@ type Props = {
   logined: boolean
   text?: string
   position?: "left" | "right"
-  parentId: number
+  storyId: number
+  parentId?: number | null
 }
 
 export default function ReplyForm({
   logined,
   text,
   position,
+  storyId,
   parentId,
 }: Props) {
   const form = useFormAction<ReplyFormValues>({
     resolver: zodResolver(replyFormSchema),
-    defaultValues: { parent: parentId, text: "" },
+    defaultValues: { storyId, parentId: parentId ?? null, text: "" },
     schema: replyFormSchema,
     mode: "onSubmit",
   })
   const goto = useGoto()
-  const action = () => {
-    form.handleAction(replyAction)
+  const action = async () => {
+    const result = (await form.handleAction(replyAction)) as
+      | { success?: boolean }
+      | undefined
+    if (result?.success) {
+      form.reset({ storyId, parentId: parentId ?? null, text: "" })
+    }
   }
   return (
     <Form {...form}>
       <form className="space-y-4" action={action}>
-        <input hidden name="parent" defaultValue={parentId} />
+        <input hidden name="storyId" defaultValue={storyId} />
+        <input hidden name="parentId" defaultValue={parentId ?? ""} />
         <FormField
           control={form.control}
           name="text"

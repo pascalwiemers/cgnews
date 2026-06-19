@@ -50,7 +50,10 @@ export default function Comment({
           </Badge>
         )}
         •
-        <Link rel="nofollow noreferrer" href={{ pathname: "/item", query: { id: comment.id } }}>
+        <Link
+          rel="nofollow noreferrer"
+          href={{ pathname: "/item", query: { id: comment.id } }}
+        >
           {timeAgo(comment.time)} ago
         </Link>
       </div>
@@ -75,7 +78,9 @@ export default function Comment({
                 )}
               </div>
             )}
-            {!story?.dead && <ReplyDialog comment={comment} />}
+            {!story?.dead && story?.id && (
+              <ReplyDialog comment={comment} storyId={story.id} />
+            )}
           </div>
         </div>
       )}

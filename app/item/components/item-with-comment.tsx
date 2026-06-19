@@ -2,7 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { currentUser } from "@clerk/nextjs/server"
 
-import { getStory, listStoryComments } from "@/lib/data"
+import { getStory } from "@/lib/data"
 import { commentCount, replyableStroy } from "@/lib/hn-item-utils"
 import { cn } from "@/lib/utils"
 import { Separator } from "@/components/ui/separator"
@@ -54,13 +54,12 @@ export default async function ItemWithComment({
         <HtmlText innerHtml={story.text} />
       </div>
       {replyableStroy(story) && (
-        <ReplyForm parentId={story?.id} logined={!!clerkUser} />
+        <ReplyForm storyId={story.id} logined={!!clerkUser} />
       )}
       <Separator orientation="horizontal" className="my-2" />
       {story.descendants > 0 && (
         <span className="font-semibold">{commentCount(story.descendants)}</span>
       )}
-      {/* Simple flat comments from our DB for now */}
       <Comments ids={[]} story={story} />
     </div>
   )

@@ -47,7 +47,7 @@ function toHnItem(story: StoryWithAuthor): HnItem {
     url: story.url ?? "",
     score: story.score ?? 0,
     title: story.title,
-    descendants: story.descendants ?? story._count?.comments ?? 0,
+    descendants: story._count?.comments ?? story.descendants ?? 0,
   }
 }
 
@@ -158,15 +158,40 @@ export async function getStory(id: number): Promise<HnItem | null> {
 export async function listStoryComments(storyId: number) {
   const comments = await prisma.comment.findMany({
     where: { storyId },
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     include: { author: { select: { username: true } } },
   })
-  return comments.map((c) => ({
-    id: c.id,
-    by: c.author.username,
-    text: c.text,
-    time: Math.floor(new Date(c.createdAt).getTime() / 1000),
+
+  const nodes = comments.map((comment) => ({
+    id: comment.id,
+    by: comment.author.username,
+    text: comment.text,
+    time: Math.floor(new Date(comment.createdAt).getTime() / 1000),
+    parentId: comment.parentId,
+    comments: [] as StoryComment[],
   }))
+  const byId = new Map(nodes.map((comment) => [comment.id, comment]))
+  const roots: StoryComment[] = []
+
+  for (const comment of nodes) {
+    const parent = comment.parentId ? byId.get(comment.parentId) : null
+    if (parent) {
+      parent.comments.push(comment)
+    } else {
+      roots.push(comment)
+    }
+  }
+
+  return roots
+}
+
+export type StoryComment = {
+  id: number
+  by: string
+  text: string
+  time: number
+  parentId: number | null
+  comments: StoryComment[]
 }
 
 export async function resolveUserId(userId: string) {

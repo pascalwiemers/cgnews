@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { useCurrentUser } from "@/hooks"
 
@@ -15,7 +17,15 @@ import {
 
 import ReplyForm from "./reply-form"
 
-export default function ReplyDialog({ comment }: { comment: HnComment }) {
+type ReplyTarget = Pick<HnComment, "id" | "by" | "text" | "time">
+
+export default function ReplyDialog({
+  comment,
+  storyId,
+}: {
+  comment: ReplyTarget
+  storyId: number
+}) {
   const currentUser = useCurrentUser()
   return (
     <Dialog>
@@ -49,13 +59,13 @@ export default function ReplyDialog({ comment }: { comment: HnComment }) {
             </Link>
           </DialogTitle>
           {comment.text && (
-            <DialogDescription
-              className="item-text max-h-[260px] overflow-y-auto py-2"
-              dangerouslySetInnerHTML={{ __html: comment.text }}
-            ></DialogDescription>
+            <DialogDescription className="max-h-[260px] overflow-y-auto whitespace-pre-wrap break-words py-2">
+              {comment.text}
+            </DialogDescription>
           )}
         </DialogHeader>
         <ReplyForm
+          storyId={storyId}
           parentId={comment.id}
           text="Reply"
           position="right"
