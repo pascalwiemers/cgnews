@@ -1,7 +1,19 @@
 /* eslint-disable no-console */
 const { PrismaClient } = require('@prisma/client')
+const { PrismaLibSQL } = require('@prisma/adapter-libsql')
 
-const prisma = new PrismaClient()
+function localSqliteUrl() {
+	const databaseUrl = process.env.DATABASE_URL || 'file:./dev.db'
+
+	if (databaseUrl.startsWith('file:./') && !databaseUrl.startsWith('file:./prisma/')) {
+		return `file:./prisma/${databaseUrl.slice('file:./'.length)}`
+	}
+
+	return databaseUrl
+}
+
+const adapter = new PrismaLibSQL({ url: localSqliteUrl() })
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
 	// Upsert a demo user
@@ -106,7 +118,7 @@ async function main() {
 				commercialDisclosure: s.commercialDisclosure,
 				curatorNote: s.curatorNote,
 				featuredAt: s.featuredAt,
-				curatorId: s.curatorId,
+				curator: s.curatorId ? { connect: { id: s.curatorId } } : undefined,
 				author: { connect: { id: user.id } },
 			},
 		})
@@ -123,4 +135,3 @@ main()
 	.finally(async () => {
 		await prisma.$disconnect()
 	})
-

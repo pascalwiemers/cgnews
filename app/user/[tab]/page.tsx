@@ -4,7 +4,7 @@ import { currentUser } from "@clerk/nextjs/server"
 import { CakeSlice } from "lucide-react"
 
 import { profileTabs } from "@/config/conf"
-import { prisma } from "@/lib/db"
+import { getDb } from "@/lib/db"
 import { formatDate } from "@/lib/time-utils"
 import { Separator } from "@/components/ui/separator"
 
@@ -55,15 +55,16 @@ type ProfileUser = {
 export default async function TabPage({ params, searchParams }: Props) {
   const cu = await currentUser()
   const target = searchParams.id || cu?.username || cu?.id
+  const db = await getDb()
   let local = target
-    ? await prisma.user.findFirst({
+    ? await db.user.findFirst({
         where: { OR: [{ username: target }, { clerkId: target }] },
         include: { profile: true },
       })
     : null
 
   if (!local && cu && (target === cu.username || target === cu.id)) {
-    local = await prisma.user.create({
+    local = await db.user.create({
       data: {
         clerkId: cu.id,
         username: cu.username || cu.id,

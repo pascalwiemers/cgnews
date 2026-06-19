@@ -95,15 +95,16 @@ pnpm install
 ```bash
 cp .env.example .env.local
 ```
-3. Configure environment variables (Neon + Clerk) in `.env.local`:
+3. Configure environment variables (local SQLite + Clerk) in `.env.local`:
 ```
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB?sslmode=require"
+DATABASE_URL="file:./dev.db"
+CGNEWS_DB_RUNTIME="local"
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_xxx"
 CLERK_SECRET_KEY="sk_test_xxx"
 ```
-4. Initialize Prisma schema locally (if using Neon, ensure DATABASE_URL is set):
+4. Initialize Prisma schema locally:
 ```bash
-pnpm prisma migrate dev --name init
+pnpm prisma migrate dev
 pnpm prisma generate
 ```
 5. Run the development server with hot reload.
@@ -123,7 +124,23 @@ pnpm start
 ```
 
 ## APIs
-CGNews uses Neon (Postgres) + Prisma for community stories, comments, votes, and favorites. Clerk provides authentication.
+CGNews uses Prisma with SQLite locally and Cloudflare D1 on Workers for community stories, comments, votes, and favorites. Clerk provides authentication.
+
+## Cloudflare D1
+
+The Worker runtime expects a D1 binding named `DB`. Create the remote database,
+replace the placeholder `database_id` in `wrangler.jsonc`, then apply the
+tracked Prisma migration SQL:
+
+```bash
+pnpm db:migrate:local
+pnpm db:migrate:remote
+pnpm cf:typegen
+```
+
+`pnpm cf:build` still depends on the Next/OpenNext compatibility plan noted in
+`docs/cloudflare-opennext.md`. Use `pnpm cf:build:unsafe` only for the current
+verification path while the Next version plan is unresolved.
 
 
 ## License

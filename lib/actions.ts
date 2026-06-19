@@ -9,7 +9,7 @@ import {
   normalizeCuratorNote,
   requireCurator,
 } from "@/lib/curators"
-import { prisma } from "@/lib/db"
+import { getDb } from "@/lib/db"
 import { parseSubmitStoryForm, storyTypeFeedPath } from "@/lib/submit-story"
 
 const PROFILE_TEXT_LIMIT = 120
@@ -54,12 +54,13 @@ const normalizeWebsite = (value: FormDataEntryValue | null) => {
 }
 
 async function getOrCreateLocalUser(clerkId: string) {
+  const db = await getDb()
   const clerkUser = await currentUser()
   const username = clerkUser?.username || clerkId
-  const user = await prisma.user.findUnique({ where: { clerkId } })
+  const user = await db.user.findUnique({ where: { clerkId } })
 
   if (!user) {
-    return prisma.user.create({
+    return db.user.create({
       data: {
         clerkId,
         username,
@@ -70,7 +71,7 @@ async function getOrCreateLocalUser(clerkId: string) {
 
   if (user.username !== username) {
     try {
-      return await prisma.user.update({
+      return await db.user.update({
         where: { id: user.id },
         data: { username },
       })
@@ -85,16 +86,17 @@ async function getOrCreateLocalUser(clerkId: string) {
 export const faveAction = async (storyId: number, faved: boolean) => {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { success: false, message: "Not Login" }
-  const user = await prisma.user.findUnique({ where: { clerkId } })
+  const db = await getDb()
+  const user = await db.user.findUnique({ where: { clerkId } })
   if (!user) return { success: false, message: "User not found" }
   if (faved) {
-    await prisma.favorite.upsert({
+    await db.favorite.upsert({
       where: { userId_storyId: { userId: user.id, storyId } },
       update: {},
       create: { userId: user.id, storyId },
     })
   } else {
-    await prisma.favorite
+    await db.favorite
       .delete({ where: { userId_storyId: { userId: user.id, storyId } } })
       .catch(() => null)
   }
@@ -109,6 +111,7 @@ export const updateProfileAction = async (formData: FormData) => {
   }
 
   const user = await getOrCreateLocalUser(clerkId)
+  const db = await getDb()
   const profile = {
     about: trimProfileText(formData.get("about"), PROFILE_ABOUT_LIMIT) || "",
     website: normalizeWebsite(formData.get("website")),
@@ -118,7 +121,7 @@ export const updateProfileAction = async (formData: FormData) => {
     timezone: trimProfileText(formData.get("timezone")),
   }
 
-  await prisma.profile.upsert({
+  await db.profile.upsert({
     where: { userId: user.id },
     update: profile,
     create: {
@@ -154,31 +157,30 @@ export const replyAction = async ({
   const trimmedText = text.trim()
   if (!trimmedText)
     return { success: false, message: "Please enter your comment" }
-  const user = await prisma.user.findUnique({ where: { clerkId } })
+  const db = await getDb()
+  const user = await db.user.findUnique({ where: { clerkId } })
   if (!user) return { success: false, message: "User not found" }
 
   if (normalizedParentId) {
-    const parent = await prisma.comment.findFirst({
+    const parent = await db.comment.findFirst({
       where: { id: normalizedParentId, storyId },
       select: { id: true },
     })
     if (!parent) return { success: false, message: "Parent comment not found" }
   }
 
-  await prisma.$transaction([
-    prisma.comment.create({
-      data: {
-        storyId,
-        parentId: normalizedParentId,
-        authorId: user.id,
-        text: trimmedText,
-      },
-    }),
-    prisma.story.update({
-      where: { id: storyId },
-      data: { descendants: { increment: 1 } },
-    }),
-  ])
+  await db.comment.create({
+    data: {
+      storyId,
+      parentId: normalizedParentId,
+      authorId: user.id,
+      text: trimmedText,
+    },
+  })
+  await db.story.update({
+    where: { id: storyId },
+    data: { descendants: { increment: 1 } },
+  })
   // Ensure the item page re-renders with fresh comments
   try {
     revalidatePath("/item")
@@ -190,23 +192,24 @@ export type VoteStatus = "up" | "un"
 export const voteAction = async (storyId: number, how: VoteStatus) => {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { success: false, message: "Not Login" }
-  const user = await prisma.user.findUnique({ where: { clerkId } })
+  const db = await getDb()
+  const user = await db.user.findUnique({ where: { clerkId } })
   if (!user) return { success: false, message: "User not found" }
   if (how === "up") {
-    await prisma.vote.upsert({
+    await db.vote.upsert({
       where: { userId_storyId: { userId: user.id, storyId } },
       update: {},
       create: { userId: user.id, storyId },
     })
-    await prisma.story.update({
+    await db.story.update({
       where: { id: storyId },
       data: { score: { increment: 1 } },
     })
   } else {
-    await prisma.vote
+    await db.vote
       .delete({ where: { userId_storyId: { userId: user.id, storyId } } })
       .catch(() => null)
-    await prisma.story.update({
+    await db.story.update({
       where: { id: storyId },
       data: { score: { decrement: 1 } },
     })
@@ -220,12 +223,13 @@ export const submitStoryAction = async (formData: FormData) => {
   if (!clerkId) {
     redirect(`/login?goto=/submit`)
   }
-  let user = await prisma.user.findUnique({ where: { clerkId } })
+  const db = await getDb()
+  let user = await db.user.findUnique({ where: { clerkId } })
   if (!user) {
     // Create minimal user record if missing
     const cUser = await currentUser()
     const preferredUsername = cUser?.username || clerkId
-    user = await prisma.user.create({
+    user = await db.user.create({
       data: {
         clerkId,
         username: preferredUsername,
@@ -238,7 +242,7 @@ export const submitStoryAction = async (formData: FormData) => {
     const cUser = await currentUser()
     const desiredUsername = cUser?.username || clerkId
     if (desiredUsername && user.username !== desiredUsername) {
-      user = await prisma.user.update({
+      user = await db.user.update({
         where: { id: user.id },
         data: { username: desiredUsername },
       })
@@ -277,12 +281,12 @@ export const submitStoryAction = async (formData: FormData) => {
     }
   }
 
-  const story = await prisma.story.create({
+  const story = await db.story.create({
     data: {
       title,
       url: validatedUrl,
       text: text || null,
-      type: type as any,
+      type,
       isSelfPromo,
       commercialDisclosure,
       authorId: user.id,
@@ -314,7 +318,8 @@ export const updateCuratorNoteAction = async (formData: FormData) => {
   }
 
   const curator = await getOrCreateCuratorUser(clerkId)
-  await prisma.story.update({
+  const db = await getDb()
+  await db.story.update({
     where: { id: storyId },
     data: {
       curatorNote: normalizeCuratorNote(formData.get("curatorNote")) || null,
@@ -340,7 +345,8 @@ export const updateFeaturedStoryAction = async (formData: FormData) => {
 
   const curator = await getOrCreateCuratorUser(clerkId)
   const featured = formData.get("featured") === "true"
-  await prisma.story.update({
+  const db = await getDb()
+  await db.story.update({
     where: { id: storyId },
     data: {
       featuredAt: featured ? new Date() : null,
@@ -364,16 +370,17 @@ export const deleteCommentAction = async (formData: FormData) => {
   const commentId = Number(formData.get("commentId"))
   const storyId = Number(formData.get("storyId"))
   if (!commentId) return { success: false, message: "Invalid comment" }
-  const user = await prisma.user.findUnique({ where: { clerkId } })
+  const db = await getDb()
+  const user = await db.user.findUnique({ where: { clerkId } })
   if (!user) return { success: false, message: "User not found" }
-  const comment = await prisma.comment.findUnique({ where: { id: commentId } })
+  const comment = await db.comment.findUnique({ where: { id: commentId } })
   if (!comment) return { success: false, message: "Comment not found" }
   if (comment.authorId !== user.id)
     return { success: false, message: "Forbidden" }
   const ageMs = Date.now() - new Date(comment.createdAt).getTime()
   const withinWindow = ageMs <= 2 * 60 * 60 * 1000
   if (!withinWindow) return { success: false, message: "Delete window expired" }
-  await prisma.comment.update({
+  await db.comment.update({
     where: { id: commentId },
     data: { text: "[deleted]" },
   })

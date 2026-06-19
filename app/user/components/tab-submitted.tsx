@@ -1,9 +1,10 @@
 import { Suspense } from "react"
 import Link from "next/link"
 
-import { prisma } from "@/lib/db"
+import { getDb } from "@/lib/db"
 import { ago, points, site } from "@/lib/hn-item-utils"
 import { HnWebStory } from "@/lib/hn-web-types"
+import { normalizeStoredStoryType } from "@/lib/submit-story"
 import ItemSkeleton from "@/components/item-skeleton"
 import Story from "@/components/story"
 
@@ -40,11 +41,12 @@ async function Submitted({
   const pageSize = 10
   const skip = Number(next) || 0
   // Resolve the actual Prisma user first using either username or Clerk ID
-  const user = await prisma.user.findFirst({
+  const db = await getDb()
+  const user = await db.user.findFirst({
     where: { OR: [{ username: userId }, { clerkId: userId }] },
   })
   const stories = user
-    ? await prisma.story.findMany({
+    ? await db.story.findMany({
         where: { authorId: user.id },
         orderBy: { createdAt: "desc" },
         skip,
@@ -56,7 +58,7 @@ async function Submitted({
     title: s.title,
     url: s.url || "",
     sitestr: site(s.url || undefined) || "",
-    storyType: s.type,
+    storyType: normalizeStoredStoryType(s.type),
     score: points(s.score) || "0 points",
     by: user?.username || userId,
     age: ago(Math.floor(new Date(s.createdAt).getTime() / 1000)) || "",

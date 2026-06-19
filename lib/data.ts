@@ -1,9 +1,10 @@
-import { Prisma } from "@prisma/client"
+import type { Prisma } from "@prisma/client"
 
-import { prisma } from "./db"
+import { getDb } from "./db"
 import { HnItem, HnItemType } from "./hn-types"
 import { HnWebThread } from "./hn-web-types"
 import { sortByHot } from "./ranking"
+import { normalizeStoredStoryType } from "./submit-story"
 import { timeAgo } from "./time-utils"
 
 type StoryTypeParam =
@@ -36,11 +37,13 @@ type StoryWithAuthor = Prisma.StoryGetPayload<{
 }>
 
 function toHnItem(story: StoryWithAuthor): HnItem {
+  const storyType = normalizeStoredStoryType(story.type)
+
   return {
     id: story.id,
     deleted: false,
-    type: story.type === "JOB" ? HnItemType.job : HnItemType.story,
-    storyType: story.type,
+    type: storyType === "JOB" ? HnItemType.job : HnItemType.story,
+    storyType,
     by: story.author.username,
     time: Math.floor(new Date(story.createdAt).getTime() / 1000),
     text: story.text ?? "",
@@ -79,8 +82,9 @@ export async function listStories({
 }) {
   const skip = (page - 1) * pageSize
   const where = storyWhere(storyType)
+  const db = await getDb()
   if (order === "new") {
-    const stories = await prisma.story.findMany({
+    const stories = await db.story.findMany({
       where,
       orderBy: { createdAt: "desc" },
       skip,
@@ -90,7 +94,7 @@ export async function listStories({
     return stories.map(toHnItem)
   }
   if (order === "top") {
-    const stories = await prisma.story.findMany({
+    const stories = await db.story.findMany({
       where,
       orderBy: { score: "desc" },
       skip,
@@ -100,7 +104,7 @@ export async function listStories({
     return stories.map(toHnItem)
   }
   // hot
-  const stories = await prisma.story.findMany({
+  const stories = await db.story.findMany({
     where,
     orderBy: { createdAt: "desc" },
     // Keep hot ranking over a bounded recent window for D1; this can become a stored rankScore later.
@@ -129,7 +133,7 @@ export async function searchStories({
     return []
   }
 
-  const contains = { contains: trimmedQuery, mode: "insensitive" as const }
+  const contains = { contains: trimmedQuery }
   const where: Prisma.StoryWhereInput = {
     OR: [
       { title: contains },
@@ -146,7 +150,8 @@ export async function searchStories({
       ? [{ createdAt: "desc" }]
       : [{ score: "desc" }, { createdAt: "desc" }]
 
-  const stories = await prisma.story.findMany({
+  const db = await getDb()
+  const stories = await db.story.findMany({
     where,
     orderBy,
     skip,
@@ -157,7 +162,8 @@ export async function searchStories({
 }
 
 export async function getStory(id: number): Promise<HnItem | null> {
-  const story = await prisma.story.findUnique({
+  const db = await getDb()
+  const story = await db.story.findUnique({
     where: { id },
     include: storyInclude,
   })
@@ -166,7 +172,8 @@ export async function getStory(id: number): Promise<HnItem | null> {
 }
 
 export async function listStoryComments(storyId: number) {
-  const comments = await prisma.comment.findMany({
+  const db = await getDb()
+  const comments = await db.comment.findMany({
     where: { storyId },
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     include: { author: { select: { username: true } } },
@@ -205,7 +212,8 @@ export type StoryComment = {
 }
 
 export async function resolveUserId(userId: string) {
-  const user = await prisma.user.findFirst({
+  const db = await getDb()
+  const user = await db.user.findFirst({
     where: { OR: [{ username: userId }, { clerkId: userId }] },
     select: { id: true, username: true, clerkId: true },
   })
@@ -214,8 +222,9 @@ export async function resolveUserId(userId: string) {
 
 export async function listUserFavoriteStories(userId: string) {
   const user = await resolveUserId(userId)
+  const db = await getDb()
   const favorites = user
-    ? await prisma.favorite.findMany({
+    ? await db.favorite.findMany({
         where: { userId: user.id },
         orderBy: { createdAt: "desc" },
         include: {
@@ -232,8 +241,9 @@ export async function listUserFavoriteStories(userId: string) {
 
 export async function listUserCommentThreads(userId: string) {
   const user = await resolveUserId(userId)
+  const db = await getDb()
   const comments = user
-    ? await prisma.comment.findMany({
+    ? await db.comment.findMany({
         where: { authorId: user.id },
         orderBy: { createdAt: "desc" },
         include: {

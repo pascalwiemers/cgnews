@@ -2,7 +2,7 @@ import "server-only"
 
 import { auth, currentUser } from "@clerk/nextjs/server"
 
-import { prisma } from "@/lib/db"
+import { getDb } from "@/lib/db"
 
 export const CURATOR_NOTE_MAX_LENGTH = 500
 
@@ -40,11 +40,12 @@ export function normalizeCuratorNote(note: FormDataEntryValue | null) {
 }
 
 export async function getOrCreateCuratorUser(clerkId: string) {
-  const existing = await prisma.user.findUnique({ where: { clerkId } })
+  const db = await getDb()
+  const existing = await db.user.findUnique({ where: { clerkId } })
   if (existing) return existing
 
   const clerkUser = await currentUser()
-  return prisma.user.create({
+  return db.user.create({
     data: {
       clerkId,
       username: clerkUser?.username || clerkId,

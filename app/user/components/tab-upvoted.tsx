@@ -1,9 +1,10 @@
 import { Suspense } from "react"
 import Link from "next/link"
 
-import { prisma } from "@/lib/db"
+import { getDb } from "@/lib/db"
 import { ago, points, site } from "@/lib/hn-item-utils"
 import { HnWebStory } from "@/lib/hn-web-types"
+import { normalizeStoredStoryType } from "@/lib/submit-story"
 import Loading from "@/components/loading"
 import Story from "@/components/story"
 
@@ -63,11 +64,12 @@ async function UpvotedComments({ userId }: { userId: string }) {
 
 async function UpvotedSubmissions({ userId }: { userId: string }) {
   // Resolve local user by username or Clerk id
-  const user = await prisma.user.findFirst({
+  const db = await getDb()
+  const user = await db.user.findFirst({
     where: { OR: [{ username: userId }, { clerkId: userId }] },
   })
   const votes = user
-    ? await prisma.vote.findMany({
+    ? await db.vote.findMany({
         where: { userId: user.id },
         orderBy: { createdAt: "desc" },
         include: {
@@ -86,7 +88,7 @@ async function UpvotedSubmissions({ userId }: { userId: string }) {
       title: s.title,
       url: s.url || "",
       sitestr: site(s.url || undefined) || "",
-      storyType: s.type,
+      storyType: normalizeStoredStoryType(s.type),
       score: points(s.score) || "0 points",
       by: s.author.username,
       age: ago(Math.floor(new Date(s.createdAt).getTime() / 1000)) || "",

@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache"
 import { NextResponse } from "next/server"
 import { auth, currentUser } from "@clerk/nextjs/server"
 
-import { prisma } from "@/lib/db"
+import { getDb } from "@/lib/db"
 import { parseSubmitStoryForm, storyTypeFeedPath } from "@/lib/submit-story"
 
 export async function POST(req: Request) {
@@ -11,11 +11,12 @@ export async function POST(req: Request) {
     return NextResponse.redirect(new URL(`/login?goto=/submit`, req.url))
   }
   try {
-    let user = await prisma.user.findUnique({ where: { clerkId } })
+    const db = await getDb()
+    let user = await db.user.findUnique({ where: { clerkId } })
     if (!user) {
       const cUser = await currentUser()
       const preferredUsername = cUser?.username || clerkId
-      user = await prisma.user.create({
+      user = await db.user.create({
         data: { clerkId, username: preferredUsername, profile: { create: {} } },
       })
     } else {
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
       const cUser = await currentUser()
       const desiredUsername = cUser?.username || clerkId
       if (desiredUsername && user.username !== desiredUsername) {
-        user = await prisma.user.update({
+        user = await db.user.update({
           where: { id: user.id },
           data: { username: desiredUsername },
         })
@@ -45,12 +46,12 @@ export async function POST(req: Request) {
       )
     }
 
-    const story = await prisma.story.create({
+    const story = await db.story.create({
       data: {
         title,
         url: url || null,
         text: text || null,
-        type: type as any,
+        type,
         isSelfPromo,
         commercialDisclosure,
         authorId: user.id,

@@ -11,19 +11,22 @@
   "observability": {
     "enabled": true
   },
+  "vars": {
+    "CGNEWS_DB_RUNTIME": "d1"
+  },
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
       "service": "cgnews"
     }
   ],
-  // Thread J: replace this placeholder with the real D1 database binding
-  // after the Prisma/D1 adapter migration is designed and validated.
-  // "d1_databases": [
-  //   {
-  //     "binding": "DB",
-  //     "database_name": "cgnews",
-  //     "database_id": "<D1_DATABASE_ID>"
-  //   }
-  // ]
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cgnews",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "prisma/migrations",
+      "migrations_pattern": "prisma/migrations/*/migration.sql"
+    }
+  ]
 }
