@@ -4,7 +4,7 @@ import { Suspense, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
-import { LogIn, Menu, X } from "lucide-react"
+import { LogIn, Menu, Radio, X } from "lucide-react"
 
 import { showStoryNav } from "@/config/conf"
 import { HnUser } from "@/lib/hn-types"
@@ -36,37 +36,51 @@ export function Header() {
   const [mobileNavActive, setMobileNavActive] = useState(false)
 
   return (
-    <header className="site-header sticky top-0 z-50 w-full bg-background/80 pt-2 font-sans backdrop-blur-xl sm:pt-3">
+    <header className="site-header sticky top-0 z-50 w-full bg-background/70 pt-2 font-sans backdrop-blur-xl sm:pt-3">
       <div className="container max-w-5xl">
-        <div className="flex h-14 items-center justify-between gap-3 rounded-md border border-border/70 bg-card/95 px-3 shadow-[0_14px_36px_hsl(var(--background)/0.42),0_0_0_1px_hsl(var(--foreground)/0.03)] sm:h-[3.75rem] sm:px-4">
-          <div className="flex min-w-0 items-center gap-5 lg:gap-8">
+        <div className="rounded-md border border-border/80 bg-card/95 shadow-[0_16px_44px_hsl(var(--background)/0.5),inset_0_1px_0_hsl(var(--foreground)/0.06)]">
+          <div className="flex min-h-14 items-center justify-between gap-3 px-3 py-2 sm:min-h-[3.8rem] sm:px-4">
             <Link
               href="/"
-              className="flex min-w-0 items-center"
+              className="group flex min-w-0 items-center gap-3 hover:no-underline"
               prefetch={false}
               aria-label="CGNews home"
             >
-              <Logo />
+              <span className="grid size-9 shrink-0 place-items-center rounded-md border border-primary/30 bg-primary/10 font-mono text-[11px] font-black uppercase tracking-[0.08em] text-primary shadow-[inset_0_0_18px_hsl(var(--primary)/0.08)]">
+                CG
+              </span>
+              <span className="min-w-0">
+                <Logo />
+                <span className="hidden font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground sm:block">
+                  command feed
+                </span>
+              </span>
             </Link>
-            {storyNavVisiable && <DesktopNav className="hidden md:flex" />}
-          </div>
-          <div className="flex min-w-0 items-center justify-end gap-2">
-            <SearchInput />
-            <Suspense fallback={null}>
-              <HeaderAuth storyNavVisiable={storyNavVisiable} goto={goto} />
-            </Suspense>
-            <button
-              type="button"
-              className="grid size-9 shrink-0 place-items-center rounded-md border border-border/70 bg-secondary/50 text-foreground/80 transition-colors hover:border-primary/40 hover:text-foreground md:hidden"
-              onClick={() => setMobileNavActive(!mobileNavActive)}
-              aria-label={
-                mobileNavActive ? "Close navigation" : "Open navigation"
-              }
-              aria-expanded={mobileNavActive}
-              aria-controls="mobile-navigation"
-            >
-              {mobileNavActive ? <X size={18} /> : <Menu size={18} />}
-            </button>
+            <div className="hidden min-w-0 flex-1 justify-center px-2 md:flex">
+              {storyNavVisiable && <DesktopNav />}
+            </div>
+            <div className="flex min-w-0 items-center justify-end gap-2">
+              <div className="hidden items-center gap-1.5 rounded-full border border-border/70 bg-secondary/40 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground lg:flex">
+                <Radio size={12} className="text-primary" aria-hidden="true" />
+                live
+              </div>
+              <SearchInput />
+              <Suspense fallback={null}>
+                <HeaderAuth storyNavVisiable={storyNavVisiable} goto={goto} />
+              </Suspense>
+              <button
+                type="button"
+                className="grid size-9 shrink-0 place-items-center rounded-md border border-border/70 bg-secondary/50 text-foreground/80 transition-colors hover:border-primary/40 hover:text-foreground md:hidden"
+                onClick={() => setMobileNavActive(!mobileNavActive)}
+                aria-label={
+                  mobileNavActive ? "Close navigation" : "Open navigation"
+                }
+                aria-expanded={mobileNavActive}
+                aria-controls="mobile-navigation"
+              >
+                {mobileNavActive ? <X size={18} /> : <Menu size={18} />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
