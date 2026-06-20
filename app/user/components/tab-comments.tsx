@@ -24,9 +24,9 @@ async function Threads({ userId, next }: { userId: string; next: number }) {
   const comments = await listUserCommentThreads(userId)
   const moreLink = ""
   return (
-    <div>
+    <div className="space-y-3">
       {comments.map((comment, i) => (
-        <div key={comment.id} className="mb-1">
+        <div key={comment.id}>
           <Thread key={comment.id} comment={comment} />
         </div>
       ))}
@@ -34,7 +34,7 @@ async function Threads({ userId, next }: { userId: string; next: number }) {
         {moreLink && (
           <Link
             rel="noreferrer nofollow"
-            className="text-sm underline"
+            className="text-sm text-primary underline underline-offset-4 transition-colors hover:text-primary/80"
             href={`/user/comments?id=${userId}&${moreLink}`}
           >
             More
