@@ -2,7 +2,10 @@ import "server-only"
 
 import { getCloudflareContext } from "@opennextjs/cloudflare"
 import { PrismaD1 } from "@prisma/adapter-d1"
-import { Prisma, PrismaClient as WorkerPrismaClient } from "@prisma/client/wasm"
+import {
+  Prisma,
+  PrismaClient as WorkerPrismaClient,
+} from "@prisma/client/wasm.js"
 
 type DbClient = InstanceType<typeof WorkerPrismaClient>
 type CloudflareEnvWithD1 = CloudflareEnv & {
@@ -30,15 +33,26 @@ function canUseLocalDbFallback() {
 
 function localSqliteUrl() {
   const databaseUrl = process.env.DATABASE_URL || "file:./dev.db"
+  const [databasePath, queryString] = databaseUrl.split("?", 2)
+  const sqlitePath =
+    databasePath.startsWith("file:./") &&
+    !databasePath.startsWith("file:./prisma/")
+      ? `file:./prisma/${databasePath.slice("file:./".length)}`
+      : databasePath
 
-  if (
-    databaseUrl.startsWith("file:./") &&
-    !databaseUrl.startsWith("file:./prisma/")
-  ) {
-    return `file:./prisma/${databaseUrl.slice("file:./".length)}`
+  if (sqlitePath.startsWith("file:")) {
+    return sqlitePath
   }
 
-  return databaseUrl
+  if (!queryString) {
+    return sqlitePath
+  }
+
+  const queryParams = new URLSearchParams(queryString)
+  queryParams.delete("sslmode")
+  const nextQueryString = queryParams.toString()
+
+  return nextQueryString ? `${sqlitePath}?${nextQueryString}` : sqlitePath
 }
 
 export async function createLocalDbClient() {

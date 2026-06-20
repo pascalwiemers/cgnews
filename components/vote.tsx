@@ -66,7 +66,7 @@ export default function Vote({
               disabled={disabled}
               type="submit"
               className={cn(
-                "hover:cursor-pointer mr-3",
+                "mr-3 hover:cursor-pointer",
                 voted
                   ? "text-primary hover:text-muted-foreground/80"
                   : "text-muted-foreground/80  hover:text-primary"
@@ -75,7 +75,7 @@ export default function Vote({
               &#9650;
             </button>
           </TooltipTrigger>
-          <TooltipContent className="max-w-40 px-2 py-0.5 text-xs leading-none border-0 rounded-sm bg-primary text-primary-foreground">
+          <TooltipContent className="max-w-40 rounded-sm border-0 bg-primary px-2 py-0.5 text-xs leading-none text-primary-foreground">
             Click to {voted ? "unvote" : "vote"}
           </TooltipContent>
         </Tooltip>
