@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Activity, ArrowRight, Sparkles } from "lucide-react"
+import { Activity, ArrowRight } from "lucide-react"
 
 import {
   hideCommentCount,
@@ -55,8 +55,9 @@ export default function FeedCommandCenter({
 
   return (
     <section className="space-y-4">
-      <div className="rounded-md border border-border/80 bg-card/85">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/70 px-3 py-2 sm:px-4">
+      <div className="relative overflow-hidden rounded-md border border-border/80 bg-card/85">
+        <SignalField className="hidden opacity-25 md:block" />
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 border-b border-border/70 px-3 py-2 sm:px-4">
           <div className="flex min-w-0 items-center gap-2">
             <span className="grid size-6 place-items-center rounded-sm border border-primary/30 bg-primary/10">
               <Activity size={13} className="text-primary" aria-hidden="true" />
@@ -74,19 +75,10 @@ export default function FeedCommandCenter({
             <span className="rounded-full border border-border/70 bg-secondary/45 px-2 py-1">
               {stories.length} items
             </span>
-            <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-amber-200">
-              lead locked
-            </span>
           </div>
         </div>
 
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1.5fr)_minmax(17rem,0.8fr)]">
-          <LeadStory story={leadStory} />
-          <SignalPanel
-            storyCount={stories.length}
-            streamCount={streamStories.length}
-          />
-        </div>
+        <LeadStory story={leadStory} />
       </div>
 
       <div className="rounded-md border border-border/80 bg-card/80">
@@ -141,115 +133,56 @@ function LeadStory({ story }: { story: HnItem }) {
   const typeLabel = story.storyType ? storyTypeLabel[story.storyType] : "Link"
 
   return (
-    <article className="relative min-h-[22rem] overflow-hidden border-b border-border/70 p-4 sm:p-5 lg:border-b-0 lg:border-r">
+    <article className="relative z-10 p-4 sm:p-5">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-primary/70 via-amber-300/55 to-transparent" />
-      <div className="relative z-10 flex h-full flex-col justify-between gap-8">
-        <div className="space-y-5">
-          <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em]">
-            <span className="rounded-full border border-amber-300/35 bg-amber-300/10 px-2.5 py-1 text-amber-200">
-              Lead story
-            </span>
-            <span className="rounded-full border border-border/70 bg-secondary/45 px-2.5 py-1 text-muted-foreground">
-              {typeLabel}
-            </span>
-          </div>
-          <div className="space-y-3">
+      <div className="max-w-4xl space-y-5">
+        <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.16em]">
+          <span className="rounded-full border border-amber-300/35 bg-amber-300/10 px-2.5 py-1 text-amber-200">
+            Lead story
+          </span>
+          <span className="rounded-full border border-border/70 bg-secondary/45 px-2.5 py-1 text-muted-foreground">
+            {typeLabel}
+          </span>
+        </div>
+        <div className="space-y-3">
+          <Link
+            className="hn-story-link block text-balance text-2xl font-semibold leading-tight text-foreground transition-colors hover:text-primary sm:text-3xl"
+            href={href}
+            rel="noopener noreferrer nofollow"
+            target={lead.url ? "_blank" : "_self"}
+          >
+            {(lead.dead ? "[dead] " : "") + lead.title}
+          </Link>
+          {lead.sitestr && (
             <Link
-              className="hn-story-link block max-w-3xl text-balance text-2xl font-semibold leading-tight text-foreground transition-colors hover:text-primary sm:text-3xl"
-              href={href}
+              className="hn-story-link inline-flex max-w-full break-all font-mono text-xs font-semibold uppercase tracking-[0.12em] text-primary/85 hover:text-primary"
+              href={`/search?query=${lead.sitestr}&sort=byDate`}
               rel="noopener noreferrer nofollow"
-              target={lead.url ? "_blank" : "_self"}
             >
-              {(lead.dead ? "[dead] " : "") + lead.title}
+              {lead.sitestr}
             </Link>
-            {lead.sitestr && (
-              <Link
-                className="hn-story-link inline-flex max-w-full break-all font-mono text-xs font-semibold uppercase tracking-[0.12em] text-primary/85 hover:text-primary"
-                href={`/search?query=${lead.sitestr}&sort=byDate`}
-                rel="noopener noreferrer nofollow"
-              >
-                {lead.sitestr}
-              </Link>
-            )}
-          </div>
+          )}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <LeadMetric label="Score" value={lead.score || "0"} />
-          <LeadMetric label="By" value={lead.by || "unknown"} />
-          <LeadMetric label="Age" value={lead.age || "now"} />
+        <div className="flex flex-wrap gap-x-4 gap-y-2 border-t border-border/60 pt-4 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          {!hideScore(story.type) && (
+            <span>
+              <span className="text-foreground">
+                {lead.score || "0 points"}
+              </span>
+            </span>
+          )}
+          {!hideUsername(story.type) && (
+            <span>
+              by <span className="text-foreground">{lead.by || "unknown"}</span>
+            </span>
+          )}
+          <span>{lead.age || "now"}</span>
+          {!hideCommentCount(story.type) && (
+            <span className="text-primary">{lead.comments}</span>
+          )}
         </div>
       </div>
     </article>
-  )
-}
-
-function LeadMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-border/70 bg-background/35 px-3 py-2">
-      <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-        {label}
-      </div>
-      <div className="mt-1 truncate text-sm font-semibold text-foreground">
-        {value}
-      </div>
-    </div>
-  )
-}
-
-function SignalPanel({
-  storyCount,
-  streamCount,
-}: {
-  storyCount: number
-  streamCount: number
-}) {
-  return (
-    <aside className="signal-panel relative min-h-[22rem] overflow-hidden p-4 sm:p-5">
-      <SignalField className="opacity-55" />
-      <div className="relative z-10 flex h-full flex-col justify-between gap-6">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
-            <Sparkles size={12} aria-hidden="true" />
-            deterministic signal
-          </div>
-          <h2 className="max-w-xs text-xl font-semibold leading-tight text-foreground">
-            Observatory panel for the current feed window
-          </h2>
-        </div>
-        <div className="grid gap-2">
-          <SignalMetric label="Window" value={`${storyCount} stories`} />
-          <SignalMetric label="Queued" value={`${streamCount} rows`} />
-          <SignalMetric label="Mode" value="human curated" amber />
-        </div>
-      </div>
-    </aside>
-  )
-}
-
-function SignalMetric({
-  label,
-  value,
-  amber = false,
-}: {
-  label: string
-  value: string
-  amber?: boolean
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-md border border-border/70 bg-background/45 px-3 py-2">
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        {label}
-      </span>
-      <span
-        className={
-          amber
-            ? "font-mono text-xs font-semibold uppercase tracking-[0.08em] text-amber-200"
-            : "font-mono text-xs font-semibold uppercase tracking-[0.08em] text-foreground"
-        }
-      >
-        {value}
-      </span>
-    </div>
   )
 }

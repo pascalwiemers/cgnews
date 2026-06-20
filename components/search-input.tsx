@@ -29,7 +29,7 @@ export default function SearchInput() {
         const formData = new FormData(event.currentTarget)
         submitSearch(formData.get("query")?.toString())
       }}
-      className="relative min-w-0"
+      className="relative hidden min-w-0 sm:block"
       role="search"
     >
       <SearchIcon
@@ -38,7 +38,7 @@ export default function SearchInput() {
       />
       <Input
         placeholder="Search signals"
-        className="h-9 w-[10.25rem] rounded-full border-border/80 bg-background/55 pl-8 pr-3 font-sans text-sm text-foreground shadow-inner shadow-background/30 transition-[width,border-color,background-color] duration-200 placeholder:text-muted-foreground/70 focus:w-48 focus:border-primary/55 focus:bg-secondary/55 focus:ring-1 focus:ring-primary/45 sm:w-56 sm:focus:w-64"
+        className="h-9 w-40 rounded-full border-border/80 bg-background/55 pl-8 pr-3 font-sans text-sm text-foreground shadow-inner shadow-background/30 transition-colors duration-200 placeholder:text-muted-foreground/70 focus:border-primary/55 focus:bg-secondary/55 focus:ring-1 focus:ring-primary/45 lg:w-44 xl:w-56"
         defaultValue={searchParams.get("query")?.toString()}
         name="query"
         autoComplete="off"

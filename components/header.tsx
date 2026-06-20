@@ -4,7 +4,7 @@ import { Suspense, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
-import { LogIn, Menu, Radio, X } from "lucide-react"
+import { LogIn, Menu, Plus, X } from "lucide-react"
 
 import { showStoryNav } from "@/config/conf"
 import { HnUser } from "@/lib/hn-types"
@@ -39,7 +39,7 @@ export function Header() {
     <header className="site-header sticky top-0 z-50 w-full bg-background/70 pt-2 font-sans backdrop-blur-xl sm:pt-3">
       <div className="container max-w-5xl">
         <div className="rounded-md border border-border/80 bg-card/95 shadow-[0_16px_44px_hsl(var(--background)/0.5),inset_0_1px_0_hsl(var(--foreground)/0.06)]">
-          <div className="flex min-h-14 items-center justify-between gap-3 px-3 py-2 sm:min-h-[3.8rem] sm:px-4">
+          <div className="grid min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3 py-2 sm:min-h-[3.8rem] sm:px-4">
             <Link
               href="/"
               className="group flex min-w-0 items-center gap-3 hover:no-underline"
@@ -56,21 +56,25 @@ export function Header() {
                 </span>
               </span>
             </Link>
-            <div className="hidden min-w-0 flex-1 justify-center px-2 md:flex">
+            <div className="hidden min-w-0 justify-center overflow-hidden px-2 xl:flex">
               {storyNavVisiable && <DesktopNav />}
             </div>
             <div className="flex min-w-0 items-center justify-end gap-2">
-              <div className="hidden items-center gap-1.5 rounded-full border border-border/70 bg-secondary/40 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground lg:flex">
-                <Radio size={12} className="text-primary" aria-hidden="true" />
-                live
-              </div>
+              <Link
+                href="/submit"
+                prefetch={false}
+                className="hidden h-9 shrink-0 items-center gap-1.5 rounded-full border border-primary/35 bg-primary/10 px-3 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-primary transition-colors hover:border-primary/55 hover:bg-primary/15 hover:text-primary hover:no-underline 2xl:inline-flex"
+              >
+                <Plus size={14} aria-hidden="true" />
+                Submit
+              </Link>
               <SearchInput />
               <Suspense fallback={null}>
                 <HeaderAuth storyNavVisiable={storyNavVisiable} goto={goto} />
               </Suspense>
               <button
                 type="button"
-                className="grid size-9 shrink-0 place-items-center rounded-md border border-border/70 bg-secondary/50 text-foreground/80 transition-colors hover:border-primary/40 hover:text-foreground md:hidden"
+                className="grid size-9 shrink-0 place-items-center rounded-md border border-border/70 bg-secondary/50 text-foreground/80 transition-colors hover:border-primary/40 hover:text-foreground xl:hidden"
                 onClick={() => setMobileNavActive(!mobileNavActive)}
                 aria-label={
                   mobileNavActive ? "Close navigation" : "Open navigation"
