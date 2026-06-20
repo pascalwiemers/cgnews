@@ -41,17 +41,23 @@ async function UpvotedComments({ userId }: { userId: string }) {
   const comments: any[] = []
   const moreLink = ""
   return (
-    <div className="pt-2">
+    <div className="space-y-3">
+      {comments.length === 0 && (
+        <div className="command-panel border-dashed p-4 text-sm text-muted-foreground">
+          <div className="metadata-label mb-2">Upvoted comments</div>
+          <p>Upvoted comments are not available yet.</p>
+        </div>
+      )}
       {comments.map((comment, i) => (
-        <div key={comment.id} className="mb-1">
+        <div key={comment.id} className="command-panel min-w-0 p-3">
           <Thread key={comment.id} comment={comment} />
         </div>
       ))}
-      <div className="py-3">
+      <div className="flex justify-center pt-2">
         {moreLink && (
           <Link
             rel="noreferrer nofollow"
-            className="text-sm underline"
+            className="command-pill"
             href={`/user/comments?id=${userId}&${moreLink}`}
           >
             More
@@ -102,18 +108,26 @@ async function UpvotedSubmissions({ userId }: { userId: string }) {
   })
   const moreLink = ""
   return (
-    <div>
+    <div className="space-y-3">
+      {storyList.length === 0 && (
+        <div className="command-panel border-dashed p-4 text-sm text-muted-foreground">
+          <div className="metadata-label mb-2">Upvoted submissions</div>
+          <p>No upvoted submissions found.</p>
+        </div>
+      )}
       {storyList.map((story, i) => (
-        <div key={story.id} className="flex">
-          <span className="my-2 w-5 text-muted-foreground">{story.rank}</span>
+        <div key={story.id} className="flex min-w-0 gap-3">
+          <span className="metadata-label mt-4 w-5 shrink-0 text-right">
+            {String(i + 1).padStart(2, "0")}
+          </span>
           <Story key={story.id} data={story} hideVote={false} />
         </div>
       ))}
-      <div className="py-3">
+      <div className="flex justify-center pt-2">
         {moreLink && (
           <Link
             rel="noreferrer nofollow"
-            className="text-sm underline"
+            className="command-pill"
             href={`/user/favorites?id=${userId}&${moreLink}`}
           >
             More

@@ -1,12 +1,11 @@
 import { Metadata, ResolvingMetadata } from "next"
 import { notFound, redirect } from "next/navigation"
-import { CakeSlice } from "lucide-react"
+import { Activity, CakeSlice, ShieldCheck } from "lucide-react"
 
 import { profileTabs } from "@/config/conf"
 import { getOptionalCurrentUser } from "@/lib/auth"
 import { getDb } from "@/lib/db"
 import { formatDate } from "@/lib/time-utils"
-import { Separator } from "@/components/ui/separator"
 
 import ProfileTab from "../components/profile-tab"
 import TabAbout from "../components/tab-about"
@@ -99,45 +98,70 @@ export default async function TabPage({ params, searchParams }: Props) {
     redirect(`/user/about?id=${user.id}`)
   }
   return (
-    <div className="flex flex-col space-y-3 pt-2">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 pb-8 pt-2">
       <UserInfo user={user} />
-      <Separator orientation="horizontal" />
-      <ProfileTab userId={user.id} myself={myself} />
-      {params.tab === "about" && (
-        <TabAbout profile={user.profile} myself={myself} />
-      )}
-      {params.tab === "submitted" && (
-        <TabSubmitted
-          userId={user.id}
-          next={searchParams.next}
-          n={searchParams.n}
-        />
-      )}
-      {params.tab === "comments" && (
-        <TabComments userId={user.id} next={searchParams.next} />
-      )}
-      {params.tab === "favorites" && (
-        <TabFavorites userId={user.id} type={searchParams.type} />
-      )}
-      {params.tab === "upvoted" && (
-        <TabUpvoted userId={user.id} type={searchParams.type} />
-      )}
+      <section className="command-panel overflow-hidden">
+        <div className="border-b border-border/70 px-3 py-2 sm:px-4">
+          <ProfileTab userId={user.id} myself={myself} />
+        </div>
+        <div className="min-w-0 px-3 py-4 sm:px-4">
+          {params.tab === "about" && (
+            <TabAbout profile={user.profile} myself={myself} />
+          )}
+          {params.tab === "submitted" && (
+            <TabSubmitted
+              userId={user.id}
+              next={searchParams.next}
+              n={searchParams.n}
+            />
+          )}
+          {params.tab === "comments" && (
+            <TabComments userId={user.id} next={searchParams.next} />
+          )}
+          {params.tab === "favorites" && (
+            <TabFavorites userId={user.id} type={searchParams.type} />
+          )}
+          {params.tab === "upvoted" && (
+            <TabUpvoted userId={user.id} type={searchParams.type} />
+          )}
+        </div>
+      </section>
     </div>
   )
 }
 
 function UserInfo({ user }: { user: ProfileUser }) {
   return (
-    <div className="flex flex-col space-y-2">
-      <h1 className="text-3xl font-semibold">{user?.id}</h1>
-      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-        <span>
-          <CakeSlice size={12} className="inline" /> Born on{" "}
-          {formatDate(user.created)}
-        </span>
-        <span>•</span>
-        <span>{user.karma} Karma</span>
+    <section className="signal-panel overflow-hidden p-4 sm:p-5">
+      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0 space-y-3">
+          <div className="metadata-label flex items-center gap-2">
+            <ShieldCheck size={13} aria-hidden="true" />
+            Profile command record
+          </div>
+          <h1 className="break-all font-sans text-2xl font-semibold leading-tight text-foreground sm:text-3xl">
+            {user.id}
+          </h1>
+        </div>
+        <div className="grid min-w-0 grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+          <div className="command-panel min-w-0 px-3 py-2">
+            <div className="metadata-label mb-1 flex items-center gap-1.5">
+              <CakeSlice size={12} aria-hidden="true" />
+              Joined
+            </div>
+            <div className="break-words text-foreground">
+              {formatDate(user.created)}
+            </div>
+          </div>
+          <div className="command-panel min-w-0 px-3 py-2">
+            <div className="metadata-label mb-1 flex items-center gap-1.5">
+              <Activity size={12} aria-hidden="true" />
+              Karma
+            </div>
+            <div className="font-mono text-foreground">{user.karma}</div>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   )
 }

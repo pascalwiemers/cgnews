@@ -37,5 +37,14 @@ export default async function TypeStories({
     stories.length < limit || !nextCursor
       ? ""
       : `${path}?${searchParams.toString()}`
+  if (stories.length === 0 && storyType === HnStoryType.jobstories) {
+    return (
+      <div className="command-panel border-dashed p-4 text-sm text-muted-foreground">
+        <div className="metadata-label mb-2">Jobs</div>
+        <p>No active job posts yet.</p>
+      </div>
+    )
+  }
+
   return <ItemList stories={stories} moreLink={moreLink} />
 }

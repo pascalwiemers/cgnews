@@ -19,9 +19,14 @@ export default function FavoritesTab({ userId }: { userId?: string | null }) {
   const type = searchParams.get("type")
 
   return (
-    <div className="inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground">
+    <div className="flex flex-wrap items-center gap-1">
       {tabs.map((example, index) => (
-        <button
+        <Link
+          rel="noreferrer nofollow"
+          href={{
+            pathname: pathname,
+            query: { id: userId, type: example.label.toLowerCase() },
+          }}
           key={example.label}
           data-state={
             type === example.label.toLowerCase() || (index === 0 && !type)
@@ -29,23 +34,13 @@ export default function FavoritesTab({ userId }: { userId?: string | null }) {
               : "inactive"
           }
           className={cn(
-            "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3",
-            "py-1.5 text-sm font-medium ring-offset-background transition-all ",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            "disabled:pointer-events-none disabled:opacity-50",
-            "data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+            "command-focus inline-flex h-8 items-center justify-center rounded-full border px-3 font-mono text-[11px] font-semibold uppercase tracking-widest transition-colors",
+            "data-[state=active]:border-primary/45 data-[state=active]:bg-primary/10 data-[state=active]:text-primary",
+            "data-[state=inactive]:border-border/70 data-[state=inactive]:bg-secondary/40 data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:border-primary/30 data-[state=inactive]:hover:bg-secondary/70 data-[state=inactive]:hover:text-foreground"
           )}
         >
-          <Link
-            rel="noreferrer nofollow"
-            href={{
-              pathname: pathname,
-              query: { id: userId, type: example.label.toLowerCase() },
-            }}
-          >
-            {example.label}
-          </Link>
-        </button>
+          {example.label}
+        </Link>
       ))}
     </div>
   )

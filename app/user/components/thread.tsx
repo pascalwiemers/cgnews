@@ -17,7 +17,7 @@ export default function Thread({ comment }: { comment: HnWebThread }) {
       <button
         type="button"
         aria-expanded={collapse}
-        className="mt-1 flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="command-focus mt-1 flex size-5 shrink-0 items-center justify-center rounded-full border border-border/70 bg-secondary/40 text-muted-foreground transition-colors hover:border-primary/35 hover:bg-secondary/70 hover:text-foreground"
         onClick={() => setCollapse(!collapse)}
       >
         {collapse ? (
@@ -30,11 +30,11 @@ export default function Thread({ comment }: { comment: HnWebThread }) {
         </span>
       </button>
 
-      <div className="min-w-0 flex-1 border-l border-border/60 pl-3 transition-colors group-hover/thread:border-border">
-        <div className="flex flex-row flex-wrap items-center justify-start gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
+      <div className="min-w-0 flex-1 border-l border-border/60 pl-3 transition-colors group-hover/thread:border-primary/30">
+        <div className="metadata-label flex flex-row flex-wrap items-center justify-start gap-x-1.5 gap-y-1">
           <Link
             rel="noreferrer nofollow"
-            className="font-medium text-foreground/90 transition-colors hover:text-primary hover:underline"
+            className="break-all text-foreground/90 transition-colors hover:text-primary hover:underline"
             href={`/user?id=${comment.userId}`}
           >
             {comment.userId}
@@ -47,7 +47,7 @@ export default function Thread({ comment }: { comment: HnWebThread }) {
               <Link
                 rel="noreferrer nofollow"
                 href={comment.storyLink || ""}
-                className="min-w-0 max-w-full truncate transition-colors hover:text-primary hover:underline"
+                className="min-w-0 max-w-full break-words transition-colors hover:text-primary hover:underline"
               >
                 on: {comment.onStory}
               </Link>
@@ -61,7 +61,7 @@ export default function Thread({ comment }: { comment: HnWebThread }) {
           )}
         >
           <div className="overflow-hidden">
-            <div className="mb-2 text-sm leading-6">
+            <div className="mb-2 text-sm leading-6 [overflow-wrap:anywhere]">
               <HtmlText innerHtml={comment.commentHtml} />
             </div>
             {replies && replies.length > 0 && (

@@ -52,19 +52,17 @@ export default async function TabAbout({
   ].filter((row) => row.value)
 
   return (
-    <div className="max-w-2xl space-y-5 pt-2">
-      {(rows.length > 0 || profile.about) && (
-        <section className="space-y-4">
+    <div className="w-full space-y-5">
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_17rem]">
+        <div className="min-w-0 space-y-4">
           {rows.length > 0 && (
-            <dl className="divide-y divide-border/60 rounded-sm border border-border/70 bg-card/35">
+            <dl className="command-panel divide-y divide-border/60 overflow-hidden">
               {rows.map((row) => (
                 <div
                   key={row.label}
-                  className="grid gap-1 p-3 text-sm sm:grid-cols-[9rem_1fr] sm:gap-5"
+                  className="grid min-w-0 gap-1 p-3 text-sm sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-5"
                 >
-                  <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground sm:text-sm sm:normal-case sm:tracking-normal">
-                    {row.label}
-                  </dt>
+                  <dt className="metadata-label pt-0.5">{row.label}</dt>
                   <dd className="min-w-0 text-foreground [overflow-wrap:anywhere]">
                     {row.href ? (
                       <a
@@ -89,19 +87,39 @@ export default async function TabAbout({
             </dl>
           )}
           {profile.about && (
-            <p className="whitespace-pre-wrap rounded-sm border border-border/70 bg-card/25 p-3 text-sm leading-6 text-foreground">
-              {profile.about}
-            </p>
+            <div className="command-panel min-w-0 p-3">
+              <div className="metadata-label mb-2">About</div>
+              <p className="whitespace-pre-wrap text-sm leading-6 text-foreground [overflow-wrap:anywhere]">
+                {profile.about}
+              </p>
+            </div>
           )}
-        </section>
-      )}
+          {rows.length === 0 && !profile.about && (
+            <EmptyProfileState copy="No profile fields have been published yet." />
+          )}
+        </div>
+        <aside className="signal-panel min-w-0 p-3">
+          <div className="metadata-label mb-2">Status</div>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p className="[overflow-wrap:anywhere]">
+              Public profile metadata for CG work, tools, production notes, and
+              availability context.
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <span className="command-pill">text-first</span>
+              <span className="command-pill">public</span>
+              <span className="command-pill">portable</span>
+            </div>
+          </div>
+        </aside>
+      </section>
 
       {myself && (
         <form
           action={updateProfileAction}
           className="space-y-4 border-t border-border/70 pt-5"
         >
-          <div className="grid gap-3 rounded-sm border border-border/70 bg-card/30 p-3 sm:grid-cols-2">
+          <div className="command-panel grid gap-3 p-3 sm:grid-cols-2">
             <label className="space-y-2 text-sm font-medium text-foreground">
               <span className="text-muted-foreground">Website</span>
               <Input
@@ -159,7 +177,7 @@ export default async function TabAbout({
               />
             </label>
           </div>
-          <label className="block space-y-2 rounded-sm border border-border/70 bg-card/30 p-3 text-sm font-medium text-foreground">
+          <label className="command-panel block space-y-2 p-3 text-sm font-medium text-foreground">
             <span className="text-muted-foreground">Bio/about</span>
             <Textarea
               className="min-h-28 bg-background/80"
@@ -174,6 +192,15 @@ export default async function TabAbout({
           </Button>
         </form>
       )}
+    </div>
+  )
+}
+
+function EmptyProfileState({ copy }: { copy: string }) {
+  return (
+    <div className="command-panel border-dashed p-4 text-sm text-muted-foreground">
+      <div className="metadata-label mb-2">Profile</div>
+      <p>{copy}</p>
     </div>
   )
 }

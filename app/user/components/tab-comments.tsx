@@ -25,16 +25,22 @@ async function Threads({ userId, next }: { userId: string; next: number }) {
   const moreLink = ""
   return (
     <div className="space-y-3">
+      {comments.length === 0 && (
+        <div className="command-panel border-dashed p-4 text-sm text-muted-foreground">
+          <div className="metadata-label mb-2">Comments</div>
+          <p>No comments found.</p>
+        </div>
+      )}
       {comments.map((comment, i) => (
-        <div key={comment.id}>
+        <div key={comment.id} className="command-panel min-w-0 p-3">
           <Thread key={comment.id} comment={comment} />
         </div>
       ))}
-      <div className="py-3">
+      <div className="flex justify-center pt-2">
         {moreLink && (
           <Link
             rel="noreferrer nofollow"
-            className="text-sm text-primary underline underline-offset-4 transition-colors hover:text-primary/80"
+            className="command-pill"
             href={`/user/comments?id=${userId}&${moreLink}`}
           >
             More
