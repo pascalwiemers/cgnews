@@ -48,6 +48,18 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        command: {
+          canvas: "hsl(var(--command-canvas))",
+          shell: "hsl(var(--command-canvas-raised))",
+          surface: "hsl(var(--command-surface))",
+          raised: "hsl(var(--command-surface-raised))",
+          graphite: "hsl(var(--command-border))",
+          muted: "hsl(var(--command-muted))",
+          blue: "hsl(var(--command-blue))",
+          violet: "hsl(var(--command-violet))",
+          amber: "hsl(var(--command-amber))",
+          emerald: "hsl(var(--command-emerald))",
+        },
       },
       borderRadius: {
         xl: "var(--radius)",

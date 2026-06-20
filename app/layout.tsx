@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
 import Footer from "@/components/footer"
 import { Header } from "@/components/header"
+import { SignalField } from "@/components/signal-field"
 import { ThemeProvider } from "@/components/theme-provider"
 
 import "./globals.css"
@@ -56,11 +57,12 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="relative flex min-h-screen flex-col items-center bg-background">
+            <div className="command-shell flex min-h-screen flex-col items-center bg-background">
+              <SignalField />
               <Header />
               <div className="flex w-full flex-1">
-                <div className="container flex max-w-5xl flex-1">
-                  <div className="editorial-surface -mt-2 mb-4 w-full rounded-b-md rounded-t-none border-t-0 sm:mb-6">
+                <div className="container relative z-10 flex max-w-5xl flex-1">
+                  <div className="page-surface -mt-2 mb-4 w-full rounded-b-md rounded-t-none border-t-0 sm:mb-6">
                     <main className="flex flex-1 flex-col px-2 pb-3 pt-6 sm:px-4 sm:pt-7">
                       {children}
                     </main>
