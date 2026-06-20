@@ -15,6 +15,7 @@ import {
   FormControl,
   FormField,
   FormItem,
+  FormLabel,
   FormMessage,
 } from "@/components/ui/form"
 import {
@@ -75,8 +76,15 @@ export default function ReplyForm({
           name="text"
           render={({ field }) => (
             <FormItem>
+              <FormLabel className="font-mono text-[11px] uppercase text-muted-foreground">
+                Comment
+              </FormLabel>
               <FormControl>
-                <Textarea className="h-32" {...field} />
+                <Textarea
+                  className="h-32 resize-y rounded-sm bg-background/70 leading-6"
+                  placeholder="Add a considered note, question, or production detail."
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -91,10 +99,16 @@ export default function ReplyForm({
           <ReplyButton text={text ? text : "Add Comment"} logined={logined} />
           {!logined && (
             <Popover>
-              <PopoverTrigger>
-                <InfoIcon className="size-4 text-muted-foreground" />
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="grid size-8 place-items-center rounded-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  aria-label="Login required to reply"
+                >
+                  <InfoIcon className="size-4" />
+                </button>
               </PopoverTrigger>
-              <PopoverContent className="max-w-48 border-0 bg-primary text-sm font-medium text-primary-foreground">
+              <PopoverContent className="max-w-56 rounded-sm border-border bg-card text-sm leading-6 text-card-foreground">
                 You have to be{" "}
                 <Link
                   rel="noreferrer nofollow"
@@ -129,7 +143,12 @@ export default function ReplyForm({
 function ReplyButton({ text, logined }: { text: string; logined: boolean }) {
   const { pending } = useFormStatus()
   return (
-    <Button type="submit" disabled={!logined || pending}>
+    <Button
+      type="submit"
+      disabled={!logined || pending}
+      className="rounded-sm"
+      aria-disabled={!logined || pending}
+    >
       {pending && <Loader2 className="mr-2 animate-spin" size={16} />}
       {text}
     </Button>

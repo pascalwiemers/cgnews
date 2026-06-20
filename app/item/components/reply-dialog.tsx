@@ -32,19 +32,21 @@ export default function ReplyDialog({
       <DialogTrigger asChild>
         <Button
           size={"sm"}
-          className="h-8 p-0 text-sm underline"
+          className="h-auto rounded-sm p-0 font-mono text-[11px] text-muted-foreground underline-offset-4 hover:text-primary"
           variant={"link"}
           disabled={!inTwoWeeks(comment.time)}
+          aria-label={`Reply to ${comment.by}`}
         >
-          Reply
+          reply
         </Button>
       </DialogTrigger>
       <DialogContent
+        className="border-border bg-card text-card-foreground sm:rounded-sm"
         onEscapeKeyDown={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg">
             Reply to{" "}
             <Link
               rel="noreferrer nofollow"
@@ -52,14 +54,14 @@ export default function ReplyDialog({
                 pathname: "/user",
                 query: { id: comment.by },
               }}
-              className="text-muted-foreground underline"
+              className="break-words text-muted-foreground underline"
               target="_blank"
             >
               {comment.by}
             </Link>
           </DialogTitle>
           {comment.text && (
-            <DialogDescription className="max-h-[260px] overflow-y-auto whitespace-pre-wrap break-words py-2">
+            <DialogDescription className="max-h-[260px] overflow-y-auto whitespace-pre-wrap break-words border-l border-border/70 py-2 pl-3 leading-6 text-muted-foreground">
               {comment.text}
             </DialogDescription>
           )}

@@ -1,6 +1,5 @@
 import Link from "next/link"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AuthForm } from "@/components/auth-form"
 
 type PageInfo = {
@@ -21,7 +20,7 @@ const pageMap = {
   signup: {
     title: "Create Account",
     buttonText: "Create Account",
-    switcherTips: "Alreay have an account?",
+    switcherTips: "Already have an account?",
     switcherText: "Login",
     switcherHref: "/login",
   },
@@ -36,21 +35,25 @@ export default function AuthPage({
 }) {
   const pageInfo = pageMap[page]
   return (
-    <Card className="m-auto w-full max-w-sm">
-      <CardHeader>
-        <CardTitle className="text-2xl">{pageInfo.title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          <AuthForm goto={searchParams.goto} creating={page === "signup"} />
-          <div className="bg-background text-center text-sm text-muted-foreground">
-            {pageInfo.switcherTips}{" "}
-            <Link rel="nofollow noreferrer" href={pageInfo.switcherHref} className="underline">
-              {pageInfo.switcherText}
-            </Link>
-          </div>
+    <div className="panel m-auto w-full max-w-sm px-4 py-5">
+      <div className="mb-5 border-b border-border/60 pb-4">
+        <h1 className="text-2xl font-semibold leading-tight text-foreground">
+          {pageInfo.title}
+        </h1>
+      </div>
+      <div className="space-y-6">
+        <AuthForm goto={searchParams.goto} creating={page === "signup"} />
+        <div className="text-center text-sm text-muted-foreground">
+          {pageInfo.switcherTips}{" "}
+          <Link
+            rel="nofollow noreferrer"
+            href={pageInfo.switcherHref}
+            className="underline"
+          >
+            {pageInfo.switcherText}
+          </Link>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
