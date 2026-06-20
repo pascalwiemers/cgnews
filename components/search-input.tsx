@@ -34,11 +34,11 @@ export default function SearchInput() {
     >
       <SearchIcon
         aria-hidden="true"
-        className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/80"
+        className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-primary/85"
       />
       <Input
-        placeholder="Search"
-        className="h-8 w-[8.5rem] rounded-md border-border/70 bg-secondary/35 pl-8 pr-3 font-sans text-sm text-foreground shadow-inner shadow-background/20 transition-[width,border-color,background-color] duration-200 placeholder:text-muted-foreground/70 focus:w-[10.5rem] focus:border-primary/50 focus:bg-secondary/55 focus:ring-1 focus:ring-primary/50 sm:w-44 sm:focus:w-56"
+        placeholder="Search signals"
+        className="h-9 w-[10.25rem] rounded-full border-border/80 bg-background/55 pl-8 pr-3 font-sans text-sm text-foreground shadow-inner shadow-background/30 transition-[width,border-color,background-color] duration-200 placeholder:text-muted-foreground/70 focus:w-48 focus:border-primary/55 focus:bg-secondary/55 focus:ring-1 focus:ring-primary/45 sm:w-56 sm:focus:w-64"
         defaultValue={searchParams.get("query")?.toString()}
         name="query"
         autoComplete="off"

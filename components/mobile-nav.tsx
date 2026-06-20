@@ -2,6 +2,7 @@
 
 import Link, { LinkProps } from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { Plus } from "lucide-react"
 
 import { storyNavConfig } from "@/config/conf"
 import { cn } from "@/lib/utils"
@@ -14,6 +15,9 @@ export default function MobileNav({
   onActiveChange: (open: boolean) => void
 }) {
   const pathname = usePathname()
+  const feedItems = storyNavConfig.slice(0, 3)
+  const channelItems = storyNavConfig.slice(3, 6)
+
   return (
     <div
       id="mobile-navigation"
@@ -25,29 +29,75 @@ export default function MobileNav({
     >
       <div
         className={cn(
-          "mt-2 overflow-hidden rounded-md border border-border/70 bg-card/95 shadow-[0_14px_32px_hsl(var(--background)/0.35)]"
+          "mt-2 overflow-hidden rounded-md border border-border/80 bg-card/95 shadow-[0_14px_32px_hsl(var(--background)/0.35)]"
         )}
       >
-        <div className="grid gap-1 p-2">
-          {storyNavConfig?.map(
-            (item) =>
-              item.link && (
-                <MobileLink
-                  key={item.link}
-                  href={item.link}
-                  onActiveChange={onActiveChange}
-                  className={cn(
-                    "rounded-sm px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground",
-                    pathname === item.link
-                      ? "bg-secondary text-primary shadow-[inset_2px_0_0_hsl(var(--primary)/0.8)]"
-                      : ""
-                  )}
-                >
-                  {item.name}
-                </MobileLink>
-              )
-          )}
+        <div className="grid gap-3 p-3">
+          <MobileGroup
+            label="Feeds"
+            items={feedItems}
+            pathname={pathname}
+            onActiveChange={onActiveChange}
+          />
+          <MobileGroup
+            label="Channels"
+            items={channelItems}
+            pathname={pathname}
+            onActiveChange={onActiveChange}
+          />
+          <MobileLink
+            href="/submit"
+            onActiveChange={onActiveChange}
+            className={cn(
+              "inline-flex h-10 items-center justify-center gap-2 rounded-md border border-primary/35 bg-primary/10 px-3 font-mono text-xs font-semibold uppercase tracking-[0.12em] text-primary transition-colors hover:border-primary/55 hover:bg-primary/15 hover:no-underline",
+              pathname === "/submit" ? "border-primary/65 bg-primary/15" : ""
+            )}
+          >
+            <Plus size={14} aria-hidden="true" />
+            Submit
+          </MobileLink>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function MobileGroup({
+  label,
+  items,
+  pathname,
+  onActiveChange,
+}: {
+  label: string
+  items: { name: string; link: string }[]
+  pathname: string
+  onActiveChange: (open: boolean) => void
+}) {
+  return (
+    <div className="grid gap-2">
+      <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+      </div>
+      <div className="grid grid-cols-3 gap-1.5">
+        {items?.map(
+          (item) =>
+            item.link && (
+              <MobileLink
+                key={item.link}
+                href={item.link}
+                onActiveChange={onActiveChange}
+                className={cn(
+                  "inline-flex h-9 items-center justify-center rounded-md border border-border/70 bg-secondary/35 px-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary/40 hover:bg-secondary/70 hover:text-foreground hover:no-underline",
+                  pathname === item.link ||
+                    (item.link === "/top" && pathname === "/")
+                    ? "border-primary/45 bg-primary/10 text-primary"
+                    : ""
+                )}
+              >
+                {item.name}
+              </MobileLink>
+            )
+        )}
       </div>
     </div>
   )

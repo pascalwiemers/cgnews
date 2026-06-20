@@ -18,6 +18,7 @@ import Fave from "./fave"
 type Props = {
   data: HnWebStory
   hideVote: boolean
+  rank?: number
   hidePoints?: boolean
   hideUsername?: boolean
   hideAge?: boolean
@@ -46,6 +47,7 @@ function getStoryTypeBadgeLetter(storyType?: HnWebStory["storyType"]) {
 export default function Story({
   data,
   hideVote = false,
+  rank,
   hidePoints = false,
   hideUsername = false,
   hideAge = false,
@@ -57,17 +59,22 @@ export default function Story({
   const badge =
     getStoryTypeBadgeLetter(data.storyType) ||
     getTypeBadgeLetter(data.url, data.sitestr)
+  const displayRank = data.rank || (rank ? String(rank) : "")
+
   return (
-    <article className="panel panel-hover mb-2 flex min-w-0 flex-row p-3 sm:px-4">
-      <div className="flex w-7 shrink-0 justify-start pt-0.5">
+    <article className="group mb-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)] overflow-hidden rounded-md border border-border/75 bg-card/90 transition-colors hover:border-primary/40 hover:bg-secondary/55 sm:grid-cols-[auto_auto_minmax(0,1fr)]">
+      <div className="hidden w-11 border-r border-border/60 bg-secondary/25 px-2 py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground sm:block">
+        {displayRank ? displayRank.padStart(2, "0") : "--"}
+      </div>
+      <div className="flex w-8 shrink-0 justify-center border-r border-border/50 bg-background/25 p-3 sm:w-9">
         {voteState === "visiable" && (
           <Vote storyId={data.id} upvoted={data.upvoted} state="visiable" />
         )}
         {voteState === "invisible" && <div className="invisible w-4" />}
       </div>
-      <div className="flex min-w-0 flex-1 items-start gap-2.5 sm:gap-3">
+      <div className="flex min-w-0 flex-1 items-start gap-2.5 p-3 sm:gap-3 sm:px-4">
         <div
-          className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-sm border border-primary/20 bg-primary/10 font-mono text-[10px] font-bold text-primary shadow-[inset_0_0_0_1px_hsl(var(--foreground)/0.02)]"
+          className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-sm border border-primary/25 bg-primary/10 font-mono text-[10px] font-bold text-primary shadow-[inset_0_0_0_1px_hsl(var(--foreground)/0.02)] transition-colors group-hover:border-primary/45"
           aria-label={`Story type ${badge}`}
           title={`Story type ${badge}`}
         >
@@ -77,10 +84,10 @@ export default function Story({
           <h2 className="m-0 flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
             <Link
               className={cn(
-                "hn-story-link min-w-0 break-words font-sans text-[1rem] font-semibold leading-snug text-foreground sm:text-[1.04rem]",
+                "hn-story-link min-w-0 break-words font-sans text-[1rem] font-semibold leading-snug text-foreground transition-colors sm:text-[1.04rem]",
                 data.dead
                   ? "text-muted-foreground"
-                  : "text-foreground hover:text-primary"
+                  : "text-foreground hover:text-primary group-hover:text-primary"
               )}
               href={data.dead ? "" : data.url || `item?id=${data.id}`}
               rel="noopener noreferrer nofollow"
@@ -90,7 +97,7 @@ export default function Story({
             </Link>
             {data.sitestr && (
               <Link
-                className="hn-story-link max-w-full break-all font-mono text-[11px] leading-tight text-muted-foreground/70 hover:text-muted-foreground"
+                className="hn-story-link max-w-full break-all font-mono text-[11px] leading-tight text-muted-foreground/70 hover:text-primary"
                 href={`/search?query=${data.sitestr}&sort=byDate`}
                 rel="noopener noreferrer nofollow"
               >
