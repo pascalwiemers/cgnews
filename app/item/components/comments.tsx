@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils"
 
 import ReplyDialog from "./reply-dialog"
 
+type VoidFormAction = (formData: FormData) => Promise<void>
+
+const deleteCommentFormAction = deleteCommentAction as unknown as VoidFormAction
+
 export default async function Comments({
   story,
   ids,
@@ -20,7 +24,11 @@ export default async function Comments({
   const cu = await getOptionalCurrentUser()
   const myId = cu?.username || cu?.id
   if (!comments.length) {
-    return <div className="text-sm text-muted-foreground">No comments yet.</div>
+    return (
+      <div className="panel border-dashed px-4 py-6 text-sm text-muted-foreground">
+        No comments yet. Start the production notes here.
+      </div>
+    )
   }
   return (
     <ol className="space-y-3">
@@ -55,40 +63,48 @@ function CommentThread({
   return (
     <li
       className={cn(
-        "text-sm",
-        depth > 0 && "border-l border-border pl-3 md:pl-4"
+        "min-w-0 text-sm",
+        depth > 0 && "border-l border-border/70 pl-3 md:pl-4"
       )}
     >
-      <div className="flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
-        <Link
-          rel="noreferrer nofollow"
-          className="hover:underline"
-          href={`/user?id=${comment.by}`}
-        >
-          {comment.by}
-        </Link>
-        <span>•</span>
-        <span>{timeAgo(comment.time)} ago</span>
-        <span>•</span>
-        <ReplyDialog comment={comment} storyId={story.id} />
-        {canDelete && (
-          <>
-            <span>•</span>
-            <form action={deleteCommentAction} className="inline-flex">
-              <input type="hidden" name="commentId" value={comment.id} />
-              <input type="hidden" name="storyId" value={story.id} />
-              <button
-                type="submit"
-                className="text-xs text-muted-foreground hover:underline"
-              >
-                delete
-              </button>
-            </form>
-          </>
+      <div
+        className={cn(
+          "relative min-w-0 rounded-sm border border-border/50 bg-card/35 px-3 py-2.5",
+          depth > 0 && "border-l-0 bg-card/25"
         )}
-      </div>
-      <div className="mt-1 whitespace-pre-wrap break-words text-sm">
-        {comment.text}
+      >
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-muted-foreground">
+          <Link
+            rel="noreferrer nofollow"
+            className="max-w-full truncate text-muted-foreground hover:text-primary hover:no-underline"
+            href={`/user?id=${comment.by}`}
+          >
+            {comment.by}
+          </Link>
+          <span aria-hidden="true">/</span>
+          <span>{timeAgo(comment.time)} ago</span>
+          <span aria-hidden="true">/</span>
+          <ReplyDialog comment={comment} storyId={story.id} />
+          {canDelete && (
+            <>
+              <span aria-hidden="true">/</span>
+              <form action={deleteCommentFormAction} className="inline-flex">
+                <input type="hidden" name="commentId" value={comment.id} />
+                <input type="hidden" name="storyId" value={story.id} />
+                <button
+                  type="submit"
+                  className="rounded-sm text-[11px] text-muted-foreground underline-offset-4 hover:text-destructive hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  aria-label={`Delete comment by ${comment.by}`}
+                >
+                  delete
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+        <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-foreground/90">
+          {comment.text}
+        </div>
       </div>
       {comment.comments.length > 0 && (
         <ol className="mt-2 space-y-2">
