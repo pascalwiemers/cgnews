@@ -76,12 +76,10 @@ export default function ReplyForm({
           name="text"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-mono text-[11px] uppercase text-muted-foreground">
-                Comment
-              </FormLabel>
+              <FormLabel className="metadata-label">transmission</FormLabel>
               <FormControl>
                 <Textarea
-                  className="h-32 resize-y rounded-sm bg-background/70 leading-6"
+                  className="h-32 resize-y rounded-md border-border/80 bg-background/75 leading-6 placeholder:text-muted-foreground/65 focus-visible:ring-primary/60"
                   placeholder="Add a considered note, question, or production detail."
                   {...field}
                 />
@@ -102,13 +100,13 @@ export default function ReplyForm({
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="grid size-8 place-items-center rounded-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  className="grid size-8 place-items-center rounded-md border border-border/70 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
                   aria-label="Login required to reply"
                 >
                   <InfoIcon className="size-4" />
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="max-w-56 rounded-sm border-border bg-card text-sm leading-6 text-card-foreground">
+              <PopoverContent className="max-w-60 rounded-md border-border/80 bg-card text-sm leading-6 text-card-foreground">
                 You have to be{" "}
                 <Link
                   rel="noreferrer nofollow"
@@ -146,7 +144,7 @@ function ReplyButton({ text, logined }: { text: string; logined: boolean }) {
     <Button
       type="submit"
       disabled={!logined || pending}
-      className="rounded-sm"
+      className="rounded-md"
       aria-disabled={!logined || pending}
     >
       {pending && <Loader2 className="mr-2 animate-spin" size={16} />}

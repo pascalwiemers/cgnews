@@ -28,12 +28,12 @@ export default function Comment({
 
   const replies = comment.comments
   return (
-    <div className="flex min-w-0 flex-col justify-start">
-      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-muted-foreground">
+    <div className="flex min-w-0 flex-col justify-start rounded-md border border-border/60 bg-card/55 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)]">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
         <Vote storyId={comment.id} state={"visiable"} />{" "}
         <Link
           rel="nofollow noreferrer"
-          className="max-w-full truncate text-muted-foreground hover:text-primary hover:no-underline"
+          className="max-w-full truncate text-foreground/80 hover:text-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
           href={{
             pathname: "/user",
             query: { id: comment.by },
@@ -44,15 +44,17 @@ export default function Comment({
         {isOp && (
           <Badge
             variant={"outline"}
-            className="rounded-sm px-1.5 py-0 font-mono text-[10px] text-accent-foreground"
+            className="rounded-sm border-primary/30 bg-primary/10 px-1.5 py-0 font-mono text-[10px] text-primary"
           >
             OP
           </Badge>
         )}
-        <span aria-hidden="true">/</span>
+        <span aria-hidden="true" className="text-border">
+          /
+        </span>
         <Link
           rel="nofollow noreferrer"
-          className="text-muted-foreground hover:text-primary hover:no-underline"
+          className="text-muted-foreground hover:text-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
           href={{ pathname: "/item", query: { id: comment.id } }}
         >
           {timeAgo(comment.time)} ago
@@ -61,14 +63,14 @@ export default function Comment({
       {comment.text && (
         <div className="mt-2 min-w-0 pl-5">
           <HtmlText
-            className="block break-words leading-6 text-foreground/90"
+            className="block break-words text-[15px] leading-7 text-foreground/90"
             innerHtml={comment.text}
           />
           <div className="mt-1 flex flex-row items-center space-x-2">
             {replies && replies.length > 0 && (
               <button
                 type="button"
-                className="grid size-7 place-items-center rounded-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                className="grid size-7 place-items-center rounded-sm text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
                 onClick={() => setCollapse(!collapse)}
                 aria-expanded={collapse}
                 aria-label={collapse ? "Collapse replies" : "Expand replies"}
@@ -93,7 +95,7 @@ export default function Comment({
             `${collapse ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`
           )}
         >
-          <div className="overflow-hidden border-l border-border/70 pl-4 md:pl-6">
+          <div className="mt-2 space-y-2 overflow-hidden border-l border-primary/25 pl-3 sm:pl-4 md:pl-6">
             {replies.map((comment) => {
               return (
                 <Comment key={comment?.id} comment={comment} story={story} />

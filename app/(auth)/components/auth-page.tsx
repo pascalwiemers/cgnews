@@ -1,6 +1,7 @@
 import Link from "next/link"
 
 import { AuthForm } from "@/components/auth-form"
+import { SignalField } from "@/components/signal-field"
 
 type PageInfo = {
   title: string
@@ -35,13 +36,15 @@ export default function AuthPage({
 }) {
   const pageInfo = pageMap[page]
   return (
-    <div className="panel m-auto w-full max-w-sm px-4 py-5">
-      <div className="mb-5 border-b border-border/60 pb-4">
+    <div className="signal-panel relative m-auto w-full max-w-sm overflow-hidden px-4 py-5">
+      <SignalField className="-right-48 -top-32 h-64 w-[32rem] opacity-25" />
+      <div className="relative mb-5 border-b border-border/60 pb-4">
+        <div className="metadata-label mb-2 text-primary">identity</div>
         <h1 className="text-2xl font-semibold leading-tight text-foreground">
           {pageInfo.title}
         </h1>
       </div>
-      <div className="space-y-6">
+      <div className="relative space-y-6">
         <AuthForm goto={searchParams.goto} creating={page === "signup"} />
         <div className="text-center text-sm text-muted-foreground">
           {pageInfo.switcherTips}{" "}
