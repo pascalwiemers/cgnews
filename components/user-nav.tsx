@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { SignOutButton } from "@clerk/nextjs"
 import {
   Bookmark,
@@ -32,40 +31,43 @@ export function UserNav({ user }: { user: HnUser }) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="relative ml-1 size-8 rounded-full border border-border/60 bg-card/40 p-0 hover:bg-muted/70"
+          className="command-focus relative ml-1 size-8 rounded-full border border-border/70 bg-card/70 p-0 hover:border-primary/35 hover:bg-secondary/70"
         >
           <Avatar className="size-8">
-            <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
+            <AvatarFallback className="bg-primary/10 font-mono text-[11px] font-semibold text-primary">
               {capitalizeFirstTwoChars(user.id)}
             </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-52 border-border/70 bg-popover/95"
+        className="w-56 border-border/80 bg-popover/95 p-1.5"
         align="end"
         forceMount
       >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="break-all text-sm font-medium leading-none">
+            <p className="break-all text-sm font-semibold leading-none">
               {user.id}
             </p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {formatDate(user.created)}
-            </p>
+            <p className="metadata-label pt-1">{formatDate(user.created)}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link rel="noreferrer nofollow" href={`/user?id=${user.id}`}>
+            <Link
+              className="gap-2"
+              rel="noreferrer nofollow"
+              href={`/user?id=${user.id}`}
+            >
               <UserRound size={14} className="mr-2" />
               Profile
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link
+              className="gap-2"
               rel="noreferrer nofollow"
               href={`/user/submitted?id=${user.id}`}
             >
@@ -74,6 +76,7 @@ export function UserNav({ user }: { user: HnUser }) {
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link
+              className="gap-2"
               rel="noreferrer nofollow"
               href={`/user/comments?id=${user.id}`}
             >
@@ -82,13 +85,14 @@ export function UserNav({ user }: { user: HnUser }) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href={`/user/favorites?id=${user.id}`}>
+            <Link className="gap-2" href={`/user/favorites?id=${user.id}`}>
               <Bookmark size={14} className="mr-2" />
               Favorites
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link
+              className="gap-2"
               rel="noreferrer nofollow"
               href={`/user/upvoted?id=${user.id}`}
             >

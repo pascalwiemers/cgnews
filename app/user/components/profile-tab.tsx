@@ -18,7 +18,7 @@ export default function ProfileTab({
 
   return (
     <ScrollArea className="max-w-full lg:max-w-none">
-      <div className="flex w-max min-w-full items-center gap-1 rounded-full border border-border/70 bg-card/40 p-1">
+      <div className="flex w-max min-w-full items-center gap-1">
         {profileTabs.map((tab, index) => {
           const active =
             pathname?.endsWith(tab.label.toLowerCase()) ||
@@ -32,10 +32,10 @@ export default function ProfileTab({
                 key={tab.label}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-8 shrink-0 items-center justify-center rounded-full border border-transparent px-3 text-center text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:px-4",
+                  "command-focus flex h-8 shrink-0 items-center justify-center rounded-full border px-3 text-center font-mono text-[11px] font-semibold uppercase tracking-widest transition-colors md:px-4",
                   active
-                    ? "border-border/80 bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    ? "border-primary/45 bg-primary/10 text-primary"
+                    : "border-border/70 bg-secondary/40 text-muted-foreground hover:border-primary/30 hover:bg-secondary/70 hover:text-foreground"
                 )}
               >
                 {tab.label}

@@ -71,24 +71,38 @@ async function Submitted({
   const nextOffset = stories.length < pageSize ? undefined : skip + pageSize
   const moreLink = nextOffset !== undefined ? `next=${nextOffset}` : ""
   return (
-    <div>
+    <div className="space-y-3">
+      {storyList.length === 0 && (
+        <EmptyActivityState label="Submissions" copy="No submissions found." />
+      )}
       {storyList.map((story, i) => (
-        <div key={story.id} className="flex space-x-3">
-          <span className="my-2 w-5 text-muted-foreground">{story.rank}</span>
+        <div key={story.id} className="flex min-w-0 gap-3">
+          <span className="metadata-label mt-4 w-5 shrink-0 text-right">
+            {String(skip + i + 1).padStart(2, "0")}
+          </span>
           <Story key={story.id} data={story} hideVote={true} />
         </div>
       ))}
-      <div className="py-3">
+      <div className="flex justify-center pt-2">
         {moreLink && (
           <Link
             rel="noreferrer nofollow"
-            className="text-sm underline"
+            className="command-pill"
             href={`/user/submitted?id=${userId}&${moreLink}`}
           >
             More
           </Link>
         )}
       </div>
+    </div>
+  )
+}
+
+function EmptyActivityState({ label, copy }: { label: string; copy: string }) {
+  return (
+    <div className="command-panel border-dashed p-4 text-sm text-muted-foreground">
+      <div className="metadata-label mb-2">{label}</div>
+      <p>{copy}</p>
     </div>
   )
 }

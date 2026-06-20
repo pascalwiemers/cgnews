@@ -8,7 +8,6 @@ import Loading from "@/components/loading"
 import Story from "@/components/story"
 
 import FavoritesTab from "./favorites-tab"
-import Thread from "./thread"
 
 export default function TabFavorites({
   userId,
@@ -37,10 +36,9 @@ export default function TabFavorites({
 
 async function FavoriteComments({ userId }: { userId: string }) {
   return (
-    <div className="pt-2">
-      <p className="text-sm text-muted-foreground">
-        Comment favorites are not available yet.
-      </p>
+    <div className="command-panel border-dashed p-4 text-sm text-muted-foreground">
+      <div className="metadata-label mb-2">Favorite comments</div>
+      <p>Comment favorites are not available yet.</p>
     </div>
   )
 }
@@ -52,10 +50,18 @@ async function FavoriteSubmissions({ userId }: { userId: string }) {
   const loginUserId = loginUser?.username || loginUser?.id
   const moreLink = ""
   return (
-    <div>
+    <div className="space-y-3">
+      {storyList.length === 0 && (
+        <div className="command-panel border-dashed p-4 text-sm text-muted-foreground">
+          <div className="metadata-label mb-2">Favorite submissions</div>
+          <p>No favorite submissions found.</p>
+        </div>
+      )}
       {storyList.map((story, i) => (
-        <div key={story.id} className="flex">
-          <span className="my-2 w-5 text-muted-foreground">{story.rank}</span>
+        <div key={story.id} className="flex min-w-0 gap-3">
+          <span className="metadata-label mt-4 w-5 shrink-0 text-right">
+            {String(i + 1).padStart(2, "0")}
+          </span>
           <Story
             key={story.id}
             data={story}
@@ -64,11 +70,11 @@ async function FavoriteSubmissions({ userId }: { userId: string }) {
           />
         </div>
       ))}
-      <div className="py-3">
+      <div className="flex justify-center pt-2">
         {moreLink && (
           <Link
             rel="noreferrer nofollow"
-            className="text-sm underline"
+            className="command-pill"
             href={`/user/favorites?id=${userId}&${moreLink}`}
           >
             More
