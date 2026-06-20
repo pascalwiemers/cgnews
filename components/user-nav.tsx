@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { SignOutButton } from "@clerk/nextjs"
 import {
   Bookmark,
   LogOut,
@@ -11,7 +12,6 @@ import {
   UserRound,
 } from "lucide-react"
 
-import { SignOutButton } from "@clerk/nextjs"
 import { HnUser } from "@/lib/hn-types"
 import { formatDate } from "@/lib/time-utils"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -30,16 +30,27 @@ export function UserNav({ user }: { user: HnUser }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative ml-1 size-8 rounded-full">
+        <Button
+          variant="ghost"
+          className="relative ml-1 size-8 rounded-full border border-border/60 bg-card/40 p-0 hover:bg-muted/70"
+        >
           <Avatar className="size-8">
-            <AvatarFallback>{capitalizeFirstTwoChars(user.id)}</AvatarFallback>
+            <AvatarFallback className="bg-muted text-xs font-medium text-foreground">
+              {capitalizeFirstTwoChars(user.id)}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-44" align="end" forceMount>
+      <DropdownMenuContent
+        className="w-52 border-border/70 bg-popover/95"
+        align="end"
+        forceMount
+      >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.id}</p>
+            <p className="break-all text-sm font-medium leading-none">
+              {user.id}
+            </p>
             <p className="text-xs leading-none text-muted-foreground">
               {formatDate(user.created)}
             </p>
@@ -54,12 +65,18 @@ export function UserNav({ user }: { user: HnUser }) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link rel="noreferrer nofollow" href={`/user/submitted?id=${user.id}`}>
+            <Link
+              rel="noreferrer nofollow"
+              href={`/user/submitted?id=${user.id}`}
+            >
               <Send size={14} className="mr-2" /> Submissions
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link rel="noreferrer nofollow" href={`/user/comments?id=${user.id}`}>
+            <Link
+              rel="noreferrer nofollow"
+              href={`/user/comments?id=${user.id}`}
+            >
               <MessageCircle size={14} className="mr-2" />
               Comments
             </Link>
@@ -67,11 +84,14 @@ export function UserNav({ user }: { user: HnUser }) {
           <DropdownMenuItem asChild>
             <Link href={`/user/favorites?id=${user.id}`}>
               <Bookmark size={14} className="mr-2" />
-              Favorite
+              Favorites
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link rel="noreferrer nofollow" href={`/user/upvoted?id=${user.id}`}>
+            <Link
+              rel="noreferrer nofollow"
+              href={`/user/upvoted?id=${user.id}`}
+            >
               <Triangle size={14} className="mr-2" />
               Upvoted
             </Link>
@@ -93,8 +113,8 @@ export function UserNav({ user }: { user: HnUser }) {
 
 function capitalizeFirstTwoChars(id: string) {
   if (id.length >= 2) {
-    var firstTwoChars = id.substring(0, 2)
-    var capitalizedChars = firstTwoChars.toUpperCase()
+    const firstTwoChars = id.substring(0, 2)
+    const capitalizedChars = firstTwoChars.toUpperCase()
     return capitalizedChars
   } else {
     return id
