@@ -25,7 +25,8 @@ export default async function Comments({
   const myId = cu?.username || cu?.id
   if (!comments.length) {
     return (
-      <div className="panel border-dashed px-4 py-6 text-sm text-muted-foreground">
+      <div className="signal-panel border-dashed px-4 py-6 text-sm leading-6 text-muted-foreground sm:px-5">
+        <div className="metadata-label mb-2 text-primary">no telemetry</div>
         No comments yet. Start the production notes here.
       </div>
     )
@@ -63,37 +64,44 @@ function CommentThread({
   return (
     <li
       className={cn(
-        "min-w-0 text-sm",
-        depth > 0 && "border-l border-border/70 pl-3 md:pl-4"
+        "relative min-w-0 text-sm",
+        depth > 0 && "ml-2 border-l border-primary/25 pl-3 sm:ml-3 sm:pl-4"
       )}
     >
       <div
         className={cn(
-          "relative min-w-0 rounded-sm border border-border/50 bg-card/35 px-3 py-2.5",
-          depth > 0 && "border-l-0 bg-card/25"
+          "relative min-w-0 overflow-hidden rounded-md border border-border/70 bg-card/75 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] sm:px-4",
+          depth > 0 && "border-l-primary/35 bg-card/55"
         )}
       >
-        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-muted-foreground">
+        <div className="absolute inset-y-0 left-0 w-1 bg-primary/20" />
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-1 font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
           <Link
             rel="noreferrer nofollow"
-            className="max-w-full truncate text-muted-foreground hover:text-primary hover:no-underline"
+            className="max-w-full truncate text-foreground/80 hover:text-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
             href={`/user?id=${comment.by}`}
           >
             {comment.by}
           </Link>
-          <span aria-hidden="true">/</span>
+          <span aria-hidden="true" className="text-border">
+            /
+          </span>
           <span>{timeAgo(comment.time)} ago</span>
-          <span aria-hidden="true">/</span>
+          <span aria-hidden="true" className="text-border">
+            /
+          </span>
           <ReplyDialog comment={comment} storyId={story.id} />
           {canDelete && (
             <>
-              <span aria-hidden="true">/</span>
+              <span aria-hidden="true" className="text-border">
+                /
+              </span>
               <form action={deleteCommentFormAction} className="inline-flex">
                 <input type="hidden" name="commentId" value={comment.id} />
                 <input type="hidden" name="storyId" value={story.id} />
                 <button
                   type="submit"
-                  className="rounded-sm text-[11px] text-muted-foreground underline-offset-4 hover:text-destructive hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                  className="rounded-sm text-[11px] text-muted-foreground underline-offset-4 hover:text-destructive hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
                   aria-label={`Delete comment by ${comment.by}`}
                 >
                   delete
@@ -102,7 +110,7 @@ function CommentThread({
             </>
           )}
         </div>
-        <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-foreground/90">
+        <div className="mt-2 whitespace-pre-wrap break-words pl-1 text-[15px] leading-7 text-foreground/90">
           {comment.text}
         </div>
       </div>

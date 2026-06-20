@@ -72,18 +72,16 @@ export function SubmitForm() {
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-mono text-[11px] uppercase text-muted-foreground">
-                Type
-              </FormLabel>
+              <FormLabel className="metadata-label">signal type</FormLabel>
               <FormControl>
-                <div className="grid grid-cols-4 gap-1 rounded-sm border border-border/70 bg-background/60 p-1">
+                <div className="grid grid-cols-2 gap-1 rounded-md border border-border/70 bg-background/60 p-1 sm:grid-cols-4">
                   {storyTypes.map((storyType) => (
                     <Label
                       key={storyType.value}
                       className={cn(
-                        "cursor-pointer rounded-sm px-2 py-1.5 text-center text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-accent-foreground",
+                        "cursor-pointer rounded-sm p-2 text-center text-xs font-semibold text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary",
                         field.value === storyType.value &&
-                          "bg-accent text-accent-foreground shadow-sm"
+                          "bg-primary/15 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.28)]"
                       )}
                     >
                       <input
@@ -111,14 +109,12 @@ export function SubmitForm() {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-mono text-[11px] uppercase text-muted-foreground">
-                Title
-              </FormLabel>
+              <FormLabel className="metadata-label">dossier title</FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   name="title"
-                  className="bg-background/70"
+                  className="rounded-md border-border/80 bg-background/75 focus-visible:ring-primary/60"
                   placeholder="Concise headline, tool release, breakdown, or question"
                 />
               </FormControl>
@@ -131,14 +127,12 @@ export function SubmitForm() {
           name="url"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-mono text-[11px] uppercase text-muted-foreground">
-                URL
-              </FormLabel>
+              <FormLabel className="metadata-label">source url</FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   name="url"
-                  className="bg-background/70"
+                  className="rounded-md border-border/80 bg-background/75 focus-visible:ring-primary/60"
                   placeholder="https://..."
                 />
               </FormControl>
@@ -154,12 +148,10 @@ export function SubmitForm() {
           name="text"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="font-mono text-[11px] uppercase text-muted-foreground">
-                Text
-              </FormLabel>
+              <FormLabel className="metadata-label">context</FormLabel>
               <FormControl>
                 <Textarea
-                  className="h-36 resize-y rounded-sm bg-background/70 leading-6"
+                  className="h-36 resize-y rounded-md border-border/80 bg-background/75 leading-6 focus-visible:ring-primary/60"
                   {...field}
                   name="text"
                   placeholder="Optional context, production notes, or the full discussion prompt."
@@ -172,8 +164,8 @@ export function SubmitForm() {
             </FormItem>
           )}
         />
-        <div className="rounded-sm border border-border/60 bg-muted/20 p-3">
-          <div className="mb-3 font-mono text-[11px] uppercase text-muted-foreground">
+        <div className="rounded-md border border-command-amber/35 bg-command-amber/10 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)]">
+          <div className="metadata-label mb-3 text-command-amber">
             Disclosure
           </div>
           <div className="space-y-4">
@@ -189,7 +181,7 @@ export function SubmitForm() {
                       value="true"
                       checked={!!field.value}
                       onChange={field.onChange}
-                      className="size-4 rounded-sm border-border bg-background accent-primary"
+                      className="size-4 rounded-sm border-border bg-background accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
                     />
                     Self-promo or affiliated work
                   </Label>
@@ -202,12 +194,12 @@ export function SubmitForm() {
               name="commercialDisclosure"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-mono text-[11px] uppercase text-muted-foreground">
+                  <FormLabel className="metadata-label">
                     Commercial disclosure
                   </FormLabel>
                   <FormControl>
                     <Textarea
-                      className="h-20 resize-y rounded-sm bg-background/70 leading-6"
+                      className="h-20 resize-y rounded-md border-border/80 bg-background/75 leading-6 focus-visible:ring-primary/60"
                       {...field}
                       name="commercialDisclosure"
                       placeholder="Relevant employer, client, sponsorship, product ownership, or paid relationship."
@@ -224,7 +216,7 @@ export function SubmitForm() {
             Provide a URL or text. Link posts may still include optional
             context.
           </FormDescription>
-          <Button type="submit" className="rounded-sm">
+          <Button type="submit" className="rounded-md">
             Submit
           </Button>
         </div>
