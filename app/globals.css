@@ -4,35 +4,35 @@
 
 @layer base {
   :root {
-    --background: 185 30% 5%;
-    --foreground: 180 18% 95%;
+    --background: 220 18% 5%;
+    --foreground: 210 24% 94%;
 
-    --card: 186 28% 6.5%;
-    --card-foreground: 180 18% 95%;
+    --card: 220 14% 8%;
+    --card-foreground: 210 24% 94%;
 
-    --popover: 186 28% 6.5%;
-    --popover-foreground: 180 18% 95%;
+    --popover: 220 13% 9%;
+    --popover-foreground: 210 24% 94%;
 
-    --primary: 174 78% 62%; /* turquoise glow */
-    --primary-foreground: 186 25% 8%;
+    --primary: 174 82% 56%;
+    --primary-foreground: 220 18% 5%;
 
-    --secondary: 186 20% 13%;
-    --secondary-foreground: 180 18% 95%;
+    --secondary: 220 12% 13%;
+    --secondary-foreground: 210 20% 88%;
 
-    --muted: 186 18% 13.5%;
-    --muted-foreground: 170 16% 62%;
+    --muted: 220 10% 15%;
+    --muted-foreground: 215 10% 62%;
 
-    --accent: 182 28% 14%;
-    --accent-foreground: 174 72% 68%;
+    --accent: 220 11% 16%;
+    --accent-foreground: 210 22% 92%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 180 20% 96%;
+    --destructive: 2 68% 44%;
+    --destructive-foreground: 210 24% 94%;
 
-    --border: 188 22% 18%;
-    --input: 188 22% 18%;
-    --ring: 174 78% 62%;
+    --border: 220 10% 20%;
+    --input: 220 10% 22%;
+    --ring: 174 82% 56%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
   }
 
   .light {
@@ -72,11 +72,24 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image:
-      radial-gradient(32% 22% at 8% -10%, hsl(174 78% 62% / 0.04), transparent 42%),
-      radial-gradient(28% 20% at 98% 12%, hsl(174 78% 62% / 0.035), transparent 48%),
-      radial-gradient(18% 18% at 2% 98%, hsl(176 65% 50% / 0.035), transparent 48%);
-    background-attachment: fixed;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+@layer components {
+  .editorial-surface {
+    @apply border border-border/70 bg-card text-card-foreground shadow-none;
+  }
+
+  .meta-line {
+    @apply text-xs font-medium leading-none text-muted-foreground;
+  }
+
+  .technical-meta {
+    @apply font-mono text-[11px] leading-none text-muted-foreground;
   }
 }
 
@@ -103,7 +116,6 @@ pre {
   @apply underline;
 }
 
-/* Compact story-list styling */
 .hn-story-link {
   text-decoration: none;
 }
@@ -121,13 +133,11 @@ pre {
   color: hsl(var(--accent-foreground));
 }
 
-/* Remove default focus styles and add custom ones */
 .hn-nav-tab:focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
 
-/* Custom scrollbar for dark theme */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -145,9 +155,9 @@ pre {
   background: hsl(var(--muted-foreground));
 }
 
-/* Improve link styling */
 a {
   color: hsl(var(--primary));
+  text-underline-offset: 0.18em;
 }
 
 a:hover {
@@ -155,26 +165,25 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Better focus styles */
 *:focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
 
-/* Panels (story cards) */
 .panel {
   position: relative;
   border-radius: var(--radius);
-  background: hsl(var(--card) / 0.5);
-  border: 1px solid hsl(var(--border) / 0.6);
-  box-shadow:
-    0 0 0 1px hsl(var(--foreground) / 0.02);
-  transition: background-color 200ms cubic-bezier(.2,.8,.2,1), border-color 200ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms cubic-bezier(.2,.8,.2,1), transform 200ms cubic-bezier(.2,.8,.2,1);
-  backdrop-filter: saturate(120%) blur(1px);
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.72);
+  box-shadow: none;
+  transition:
+    background-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .panel::after {
-  /* subtle corner lighting */
   content: "";
   position: absolute;
   inset: 0;
@@ -184,14 +193,11 @@ a:hover {
 }
 
 .panel-hover:hover {
-  background: hsl(var(--card) / 0.5);
-  border-color: hsl(var(--border) / 0.8);
-  box-shadow:
-    0 0 0 1px hsl(var(--foreground) / 0.03),
-    0 6px 16px hsl(var(--foreground) / 0.035);
+  background: hsl(var(--accent));
+  border-color: hsl(var(--border));
+  box-shadow: none;
 }
 
-/* Desktop nav underline tabs */
 .tab-underline {
   position: relative;
   transition: color 200ms ease;
@@ -209,7 +215,7 @@ a:hover {
   right: 16%;
   bottom: -6px;
   height: 2px;
-  background: linear-gradient(90deg, hsl(var(--accent-foreground) / 0.5), hsl(var(--primary) / 0.9));
+  background: hsl(var(--primary));
   border-radius: 9999px;
   transform: scaleX(0);
   transform-origin: center;
@@ -220,7 +226,6 @@ a:hover {
   transform: scaleX(0.5);
 }
 
-/* Prevent default underline on header links; keep custom underline */
 .site-header a:hover {
   text-decoration: none;
 }

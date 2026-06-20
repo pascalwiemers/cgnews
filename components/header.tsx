@@ -37,8 +37,8 @@ export function Header() {
 
   return (
     <header className="site-header sticky top-0 z-50 w-full bg-transparent pt-3 font-sans sm:pt-4">
-      <div className="container max-w-5xl overflow-hidden rounded-t-3xl">
-        <div className="panel mb-0 flex h-16 items-center justify-between rounded-b-none rounded-t-3xl border-b-0 !bg-card px-6 sm:px-8">
+      <div className="container max-w-5xl overflow-hidden rounded-t-md">
+        <div className="panel mb-0 flex h-16 items-center justify-between rounded-b-none rounded-t-md border-b-0 px-6 sm:px-8">
           <div className="flex items-center space-x-12">
             <Link href="/" className="flex items-center" prefetch={false}>
               <Logo />

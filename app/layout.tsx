@@ -45,7 +45,7 @@ export default function RootLayout({
       <html lang="en">
         <body
           className={cn(
-            "min-h-screen bg-background font-mono antialiased",
+            "min-h-screen bg-background font-sans antialiased",
             fontSans.variable,
             fontMono.variable
           )}
@@ -60,7 +60,7 @@ export default function RootLayout({
               <Header />
               <div className="flex w-full flex-1">
                 <div className="container flex max-w-5xl flex-1">
-                  <div className="-mt-2 mb-4 w-full rounded-b-md rounded-t-none border border-t-0 border-border/60 bg-card shadow-[0_0_0_1px_hsl(var(--foreground)/0.02)] sm:mb-6">
+                  <div className="editorial-surface -mt-2 mb-4 w-full rounded-b-md rounded-t-none border-t-0 sm:mb-6">
                     <main className="flex flex-1 flex-col px-2 pb-3 pt-6 sm:px-4 sm:pt-7">
                       {children}
                     </main>
