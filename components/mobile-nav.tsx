@@ -16,33 +16,38 @@ export default function MobileNav({
   const pathname = usePathname()
   return (
     <div
+      id="mobile-navigation"
       className={cn(
-        "md:hidden",
-        `grid overflow-hidden text-sm transition-all duration-300 ease-in-out`,
-        `${active ? "my-2 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`
+        "container max-w-5xl md:hidden",
+        "grid overflow-hidden text-sm transition-all duration-300 ease-in-out",
+        active ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
       )}
     >
       <div
-        className={cn("flex flex-col space-y-3 overflow-hidden px-5 text-sm")}
-      >
-        {storyNavConfig?.map(
-          (item) =>
-            item.link && (
-              <MobileLink
-                key={item.link}
-                href={item.link}
-                onActiveChange={onActiveChange}
-                className={cn(
-                  "transition-colors hover:text-foreground/80 ",
-                  pathname === item.link
-                    ? "text-foreground"
-                    : "text-foreground/50"
-                )}
-              >
-                {item.name}
-              </MobileLink>
-            )
+        className={cn(
+          "mt-2 overflow-hidden rounded-md border border-border/70 bg-card/95 shadow-[0_14px_32px_hsl(var(--background)/0.35)]"
         )}
+      >
+        <div className="grid gap-1 p-2">
+          {storyNavConfig?.map(
+            (item) =>
+              item.link && (
+                <MobileLink
+                  key={item.link}
+                  href={item.link}
+                  onActiveChange={onActiveChange}
+                  className={cn(
+                    "rounded-sm px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground",
+                    pathname === item.link
+                      ? "bg-secondary text-primary shadow-[inset_2px_0_0_hsl(var(--primary)/0.8)]"
+                      : ""
+                  )}
+                >
+                  {item.name}
+                </MobileLink>
+              )
+          )}
+        </div>
       </div>
     </div>
   )
