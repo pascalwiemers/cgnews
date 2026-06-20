@@ -51,7 +51,7 @@ export default async function ItemWithComment({
   ])
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col justify-start space-y-5">
-      <article className="panel px-4 py-4 sm:px-5 sm:py-5">
+      <article className="panel p-4 sm:p-5">
         <div className="flex min-w-0 items-start justify-between gap-4">
           <div className="min-w-0 space-y-3">
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium uppercase text-muted-foreground/80">
@@ -141,7 +141,7 @@ export default async function ItemWithComment({
         )}
       </article>
       {replyableStroy(story) && (
-        <section className="panel px-4 py-4 sm:px-5" aria-label="Add a comment">
+        <section className="panel p-4 sm:px-5" aria-label="Add a comment">
           <div className="mb-3 flex items-baseline justify-between gap-3">
             <h2 className="text-sm font-semibold text-foreground">
               Join the thread

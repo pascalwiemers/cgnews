@@ -22,7 +22,7 @@ export default function Page({
           Continue the discussion with the CG production community.
         </p>
       </div>
-      <div className="panel px-3 py-3 [&_.cl-card]:bg-transparent [&_.cl-card]:shadow-none [&_.cl-footerActionText]:text-muted-foreground [&_.cl-headerSubtitle]:text-muted-foreground [&_.cl-headerTitle]:text-foreground [&_.cl-rootBox]:w-full">
+      <div className="panel p-3 [&_.cl-card]:bg-transparent [&_.cl-card]:shadow-none [&_.cl-footerActionText]:text-muted-foreground [&_.cl-headerSubtitle]:text-muted-foreground [&_.cl-headerTitle]:text-foreground [&_.cl-rootBox]:w-full">
         <SignIn routing="hash" />
       </div>
     </div>

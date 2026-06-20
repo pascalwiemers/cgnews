@@ -22,7 +22,7 @@ export default function Page({
           Join CGNews to submit stories, reply, and save threads.
         </p>
       </div>
-      <div className="panel px-3 py-3 [&_.cl-card]:bg-transparent [&_.cl-card]:shadow-none [&_.cl-footerActionText]:text-muted-foreground [&_.cl-headerSubtitle]:text-muted-foreground [&_.cl-headerTitle]:text-foreground [&_.cl-rootBox]:w-full">
+      <div className="panel p-3 [&_.cl-card]:bg-transparent [&_.cl-card]:shadow-none [&_.cl-footerActionText]:text-muted-foreground [&_.cl-headerSubtitle]:text-muted-foreground [&_.cl-headerTitle]:text-foreground [&_.cl-rootBox]:w-full">
         <SignUp routing="hash" />
       </div>
     </div>

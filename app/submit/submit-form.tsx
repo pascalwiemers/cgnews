@@ -66,10 +66,7 @@ export function SubmitForm() {
 
   return (
     <Form {...form}>
-      <form
-        action={submitStoryAction}
-        className="panel space-y-5 px-4 py-4 sm:px-5"
-      >
+      <form action={submitStoryAction} className="panel space-y-5 p-4 sm:px-5">
         <FormField
           control={form.control}
           name="type"
