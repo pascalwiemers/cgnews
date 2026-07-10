@@ -26,6 +26,11 @@ still owns public profiles and submitted community content.
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
 
+Pull requests and feature branches run the secret-free `Validate CGNews`
+workflow. Merging to `main` runs `Deploy CGNews`, which checks, builds, migrates,
+deploys, and smoke-tests production in order. Do not merge until all four
+repository secrets above are configured.
+
 ## Operations
 
 Before migrations, export a backup:
