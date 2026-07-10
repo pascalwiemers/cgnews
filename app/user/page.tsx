@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation"
 
-export default function UserPage({
+export default async function UserPage({
   searchParams,
 }: {
-  searchParams: { id?: string }
+  searchParams: Promise<{ id?: string }>
 }) {
-  const suffix = searchParams.id
-    ? `?id=${encodeURIComponent(searchParams.id)}`
-    : ""
+  const query = await searchParams
+  const suffix = query.id ? `?id=${encodeURIComponent(query.id)}` : ""
 
   redirect(`/user/about${suffix}`)
 }

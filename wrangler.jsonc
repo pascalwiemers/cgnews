@@ -6,27 +6,33 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
   },
   "observability": {
-    "enabled": true
+    "enabled": true,
   },
+  "routes": [
+    {
+      "pattern": "cgnews.app",
+      "custom_domain": true,
+    },
+  ],
   "vars": {
-    "CGNEWS_DB_RUNTIME": "d1"
+    "CGNEWS_DB_RUNTIME": "d1",
   },
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "cgnews"
-    }
+      "service": "cgnews",
+    },
   ],
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "cgnews",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "a65eb1e7-33f3-4208-bcc3-79ff0500d264",
       "migrations_dir": "prisma/migrations",
-      "migrations_pattern": "prisma/migrations/*/migration.sql"
-    }
-  ]
+      "migrations_pattern": "prisma/migrations/*/migration.sql",
+    },
+  ],
 }

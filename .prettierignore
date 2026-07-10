@@ -5,3 +5,4 @@ build
 *.md
 *.html
 pnpm-lock.yaml
+cloudflare-env.d.ts

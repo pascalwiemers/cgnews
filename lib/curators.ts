@@ -1,9 +1,9 @@
 import "server-only"
 
-import { auth, currentUser } from "@clerk/nextjs/server"
+import { auth } from "@clerk/nextjs/server"
 
 import { hasClerkSessionCookie } from "@/lib/auth"
-import { getDb } from "@/lib/db"
+import { getOrCreateLocalUser } from "@/lib/local-user"
 
 export const CURATOR_NOTE_MAX_LENGTH = 500
 
@@ -21,7 +21,7 @@ export function isCuratorClerkId(clerkId?: string | null) {
 }
 
 export async function isCurator() {
-  if (!hasClerkSessionCookie()) return false
+  if (!(await hasClerkSessionCookie())) return false
   const { userId } = await auth()
   return isCuratorClerkId(userId)
 }
@@ -42,16 +42,5 @@ export function normalizeCuratorNote(note: FormDataEntryValue | null) {
 }
 
 export async function getOrCreateCuratorUser(clerkId: string) {
-  const db = await getDb()
-  const existing = await db.user.findUnique({ where: { clerkId } })
-  if (existing) return existing
-
-  const clerkUser = await currentUser()
-  return db.user.create({
-    data: {
-      clerkId,
-      username: clerkUser?.username || clerkId,
-      profile: { create: {} },
-    },
-  })
+  return getOrCreateLocalUser(clerkId)
 }

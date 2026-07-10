@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import { SignUp } from "@clerk/nextjs"
 
+import { safeRelativeRedirect } from "@/lib/redirects"
 import { SignalField } from "@/components/signal-field"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -9,11 +10,13 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function Page({
+export default async function Page({
   searchParams,
 }: {
-  searchParams: { goto?: string }
+  searchParams: Promise<{ goto?: string }>
 }) {
+  const query = await searchParams
+  const redirectUrl = safeRelativeRedirect(query.goto)
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center">
       <div className="signal-panel relative mb-5 overflow-hidden px-4 py-5">
@@ -29,7 +32,11 @@ export default function Page({
         </div>
       </div>
       <div className="panel p-3 [&_.cl-card]:bg-transparent [&_.cl-card]:shadow-none [&_.cl-footerActionText]:text-muted-foreground [&_.cl-headerSubtitle]:text-muted-foreground [&_.cl-headerTitle]:text-foreground [&_.cl-rootBox]:w-full">
-        <SignUp routing="hash" />
+        <SignUp
+          routing="hash"
+          fallbackRedirectUrl={redirectUrl}
+          signInUrl={`/login?goto=${encodeURIComponent(redirectUrl)}`}
+        />
       </div>
     </div>
   )

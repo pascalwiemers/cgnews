@@ -22,14 +22,14 @@ export default function MobileNav({
     <div
       id="mobile-navigation"
       className={cn(
-        "container max-w-5xl md:hidden",
+        "container max-w-6xl lg:hidden",
         "grid overflow-hidden text-sm transition-all duration-300 ease-in-out",
         active ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
       )}
     >
       <div
         className={cn(
-          "mt-2 overflow-hidden rounded-md border border-border/80 bg-card/95 shadow-[0_14px_32px_hsl(var(--background)/0.35)]"
+          "mt-2 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0a0c]/95 shadow-[0_20px_60px_rgba(0,0,0,.5),inset_0_1px_0_rgba(255,255,255,.06)] backdrop-blur-2xl"
         )}
       >
         <div className="grid gap-3 p-3">
@@ -49,7 +49,7 @@ export default function MobileNav({
             href="/submit"
             onActiveChange={onActiveChange}
             className={cn(
-              "inline-flex h-10 items-center justify-center gap-2 rounded-md border border-primary/35 bg-primary/10 px-3 font-mono text-xs font-semibold uppercase tracking-[0.12em] text-primary transition-colors hover:border-primary/55 hover:bg-primary/15 hover:no-underline",
+              "inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#5E6AD2] px-3 text-xs font-semibold text-white shadow-[0_4px_18px_rgba(94,106,210,.28),inset_0_1px_0_rgba(255,255,255,.2)] transition-colors hover:bg-[#6872D9] hover:text-white hover:no-underline",
               pathname === "/submit" ? "border-primary/65 bg-primary/15" : ""
             )}
           >
@@ -87,7 +87,7 @@ function MobileGroup({
                 href={item.link}
                 onActiveChange={onActiveChange}
                 className={cn(
-                  "inline-flex h-9 items-center justify-center rounded-md border border-border/70 bg-secondary/35 px-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:border-primary/40 hover:bg-secondary/70 hover:text-foreground hover:no-underline",
+                  "inline-flex h-9 items-center justify-center rounded-lg border border-white/[0.07] bg-white/[0.04] px-2 text-xs font-medium text-muted-foreground transition-colors hover:border-white/[0.12] hover:bg-white/[0.07] hover:text-foreground hover:no-underline",
                   pathname === item.link ||
                     (item.link === "/top" && pathname === "/")
                     ? "border-primary/45 bg-primary/10 text-primary"

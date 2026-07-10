@@ -5,6 +5,7 @@ import { Activity, CakeSlice, ShieldCheck } from "lucide-react"
 import { profileTabs } from "@/config/conf"
 import { getOptionalCurrentUser } from "@/lib/auth"
 import { getDb } from "@/lib/db"
+import { getOrCreateLocalUser } from "@/lib/local-user"
 import { formatDate } from "@/lib/time-utils"
 
 import ProfileTab from "../components/profile-tab"
@@ -15,21 +16,22 @@ import TabSubmitted from "../components/tab-submitted"
 import TabUpvoted from "../components/tab-upvoted"
 
 type Props = {
-  params: { tab: string }
-  searchParams: {
+  params: Promise<{ tab: string }>
+  searchParams: Promise<{
     id: string
     next: number
     n: number
     type: string
-  }
+  }>
 }
 
 export async function generateMetadata(
   { params, searchParams }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const userId = searchParams.id
-  const tab = params.tab
+  const [route, query] = await Promise.all([params, searchParams])
+  const userId = query.id
+  const tab = route.tab
   return {
     title: tab === "about" ? `Profile: ${userId}` : `${userId}'s ${tab}`,
   }
@@ -52,8 +54,9 @@ type ProfileUser = {
 }
 
 export default async function TabPage({ params, searchParams }: Props) {
+  const [route, query] = await Promise.all([params, searchParams])
   const cu = await getOptionalCurrentUser()
-  const target = searchParams.id || cu?.username || cu?.id
+  const target = query.id || cu?.username || cu?.id
   const db = await getDb()
   let local = target
     ? await db.user.findFirst({
@@ -63,12 +66,9 @@ export default async function TabPage({ params, searchParams }: Props) {
     : null
 
   if (!local && cu && (target === cu.username || target === cu.id)) {
-    local = await db.user.create({
-      data: {
-        clerkId: cu.id,
-        username: cu.username || cu.id,
-        profile: { create: {} },
-      },
+    await getOrCreateLocalUser(cu.id)
+    local = await db.user.findUnique({
+      where: { clerkId: cu.id },
       include: { profile: true },
     })
   }
@@ -93,7 +93,7 @@ export default async function TabPage({ params, searchParams }: Props) {
   const myselfTab = profileTabs
     .filter((item) => item.public === false)
     .map((item) => item.label.toLowerCase())
-    .includes(params.tab)
+    .includes(route.tab)
   if (myselfTab && !myself) {
     redirect(`/user/about?id=${user.id}`)
   }
@@ -105,24 +105,20 @@ export default async function TabPage({ params, searchParams }: Props) {
           <ProfileTab userId={user.id} myself={myself} />
         </div>
         <div className="min-w-0 px-3 py-4 sm:px-4">
-          {params.tab === "about" && (
+          {route.tab === "about" && (
             <TabAbout profile={user.profile} myself={myself} />
           )}
-          {params.tab === "submitted" && (
-            <TabSubmitted
-              userId={user.id}
-              next={searchParams.next}
-              n={searchParams.n}
-            />
+          {route.tab === "submitted" && (
+            <TabSubmitted userId={user.id} next={query.next} n={query.n} />
           )}
-          {params.tab === "comments" && (
-            <TabComments userId={user.id} next={searchParams.next} />
+          {route.tab === "comments" && (
+            <TabComments userId={user.id} next={query.next} />
           )}
-          {params.tab === "favorites" && (
-            <TabFavorites userId={user.id} type={searchParams.type} />
+          {route.tab === "favorites" && (
+            <TabFavorites userId={user.id} type={query.type} />
           )}
-          {params.tab === "upvoted" && (
-            <TabUpvoted userId={user.id} type={searchParams.type} />
+          {route.tab === "upvoted" && (
+            <TabUpvoted userId={user.id} type={query.type} />
           )}
         </div>
       </section>
@@ -132,7 +128,7 @@ export default async function TabPage({ params, searchParams }: Props) {
 
 function UserInfo({ user }: { user: ProfileUser }) {
   return (
-    <section className="signal-panel overflow-hidden p-4 sm:p-5">
+    <section className="border-b border-border/70 px-1 pb-5">
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 space-y-3">
           <div className="metadata-label flex items-center gap-2">
@@ -143,8 +139,8 @@ function UserInfo({ user }: { user: ProfileUser }) {
             {user.id}
           </h1>
         </div>
-        <div className="grid min-w-0 grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-          <div className="command-panel min-w-0 px-3 py-2">
+        <dl className="grid min-w-0 grid-cols-2 gap-x-8 gap-y-2 text-sm">
+          <div className="min-w-0">
             <div className="metadata-label mb-1 flex items-center gap-1.5">
               <CakeSlice size={12} aria-hidden="true" />
               Joined
@@ -153,14 +149,14 @@ function UserInfo({ user }: { user: ProfileUser }) {
               {formatDate(user.created)}
             </div>
           </div>
-          <div className="command-panel min-w-0 px-3 py-2">
+          <div className="min-w-0">
             <div className="metadata-label mb-1 flex items-center gap-1.5">
               <Activity size={12} aria-hidden="true" />
               Karma
             </div>
             <div className="font-mono text-foreground">{user.karma}</div>
           </div>
-        </div>
+        </dl>
       </div>
     </section>
   )

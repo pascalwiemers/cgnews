@@ -1,10 +1,6 @@
 import { cn } from "@/lib/utils"
 
-interface HtmlTextProps
-  extends Omit<
-    React.HTMLAttributes<HTMLSpanElement>,
-    "dangerouslySetInnerHTML"
-  > {
+interface HtmlTextProps extends React.HTMLAttributes<HTMLSpanElement> {
   innerHtml?: string
 }
 
@@ -18,9 +14,10 @@ export default function HtmlText({
   }
   return (
     <span
-      className={cn("item-text text-sm", className)}
-      dangerouslySetInnerHTML={{ __html: innerHtml }}
+      className={cn("item-text whitespace-pre-wrap text-sm", className)}
       {...prop}
-    />
+    >
+      {innerHtml}
+    </span>
   )
 }

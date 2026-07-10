@@ -4,12 +4,14 @@ type Props = {
   isSelfPromo?: boolean
   commercialDisclosure?: string | null
   className?: string
+  compact?: boolean
 }
 
 export default function StoryDisclosureLabels({
   isSelfPromo,
   commercialDisclosure,
   className,
+  compact = false,
 }: Props) {
   if (!isSelfPromo && !commercialDisclosure) {
     return null
@@ -23,16 +25,26 @@ export default function StoryDisclosureLabels({
       )}
     >
       {isSelfPromo && (
-        <span className="whitespace-nowrap rounded-sm border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-normal text-muted-foreground">
+        <span
+          className={cn(
+            "whitespace-nowrap text-[10px] uppercase tracking-normal text-muted-foreground",
+            !compact && "rounded-sm border border-border px-1.5 py-0.5"
+          )}
+        >
           self-promo
         </span>
       )}
       {commercialDisclosure && (
         <span
-          className="max-w-full whitespace-normal break-words rounded-sm border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground sm:max-w-[220px] sm:truncate sm:whitespace-nowrap"
+          className={cn(
+            "max-w-full text-[10px] text-muted-foreground",
+            compact
+              ? "whitespace-nowrap"
+              : "whitespace-normal break-words rounded-sm border border-border px-1.5 py-0.5 sm:max-w-[220px] sm:truncate sm:whitespace-nowrap"
+          )}
           title={commercialDisclosure}
         >
-          disclosure: {commercialDisclosure}
+          {compact ? "disclosed" : `disclosure: ${commercialDisclosure}`}
         </span>
       )}
     </span>

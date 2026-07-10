@@ -34,7 +34,7 @@ export default function FavoritesTab({ userId }: { userId?: string | null }) {
               : "inactive"
           }
           className={cn(
-            "command-focus inline-flex h-8 items-center justify-center rounded-full border px-3 font-mono text-[11px] font-semibold uppercase tracking-widest transition-colors",
+            "command-focus inline-flex h-8 items-center justify-center rounded-md border px-3 font-mono text-[11px] font-semibold uppercase tracking-widest transition-colors",
             "data-[state=active]:border-primary/45 data-[state=active]:bg-primary/10 data-[state=active]:text-primary",
             "data-[state=inactive]:border-border/70 data-[state=inactive]:bg-secondary/40 data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:border-primary/30 data-[state=inactive]:hover:bg-secondary/70 data-[state=inactive]:hover:text-foreground"
           )}

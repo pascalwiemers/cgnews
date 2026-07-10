@@ -12,13 +12,13 @@ function hasClerkCookieName(name: string) {
   )
 }
 
-export function hasClerkSessionCookie() {
-  return cookies()
+export async function hasClerkSessionCookie() {
+  return (await cookies())
     .getAll()
     .some((cookie) => hasClerkCookieName(cookie.name))
 }
 
 export async function getOptionalCurrentUser() {
-  if (!hasClerkSessionCookie()) return null
+  if (!(await hasClerkSessionCookie())) return null
   return currentUser()
 }

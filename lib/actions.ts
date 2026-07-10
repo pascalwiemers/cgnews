@@ -2,7 +2,7 @@
 
 import { revalidatePath, revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
-import { auth, currentUser } from "@clerk/nextjs/server"
+import { auth } from "@clerk/nextjs/server"
 
 import {
   PUBLIC_FEED_CACHE_TAG,
@@ -14,7 +14,12 @@ import {
   requireCurator,
 } from "@/lib/curators"
 import { getDb } from "@/lib/db"
-import { parseSubmitStoryForm, storyTypeFeedPath } from "@/lib/submit-story"
+import { getOrCreateLocalUser } from "@/lib/local-user"
+import {
+  parseSubmitStoryForm,
+  storyTypeFeedPath,
+  validateSubmitStoryInput,
+} from "@/lib/submit-story"
 
 const PROFILE_TEXT_LIMIT = 120
 const PROFILE_ABOUT_LIMIT = 800
@@ -62,42 +67,11 @@ const normalizeWebsite = (value: FormDataEntryValue | null) => {
   }
 }
 
-async function getOrCreateLocalUser(clerkId: string) {
-  const db = await getDb()
-  const clerkUser = await currentUser()
-  const username = clerkUser?.username || clerkId
-  const user = await db.user.findUnique({ where: { clerkId } })
-
-  if (!user) {
-    return db.user.create({
-      data: {
-        clerkId,
-        username,
-        profile: { create: {} },
-      },
-    })
-  }
-
-  if (user.username !== username) {
-    try {
-      return await db.user.update({
-        where: { id: user.id },
-        data: { username },
-      })
-    } catch {
-      return user
-    }
-  }
-
-  return user
-}
-
 export const faveAction = async (storyId: number, faved: boolean) => {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { success: false, message: "Not Login" }
   const db = await getDb()
-  const user = await db.user.findUnique({ where: { clerkId } })
-  if (!user) return { success: false, message: "User not found" }
+  const user = await getOrCreateLocalUser(clerkId)
   if (faved) {
     await db.favorite.upsert({
       where: { userId_storyId: { userId: user.id, storyId } },
@@ -163,12 +137,22 @@ export const replyAction = async ({
   ) {
     return { success: false, message: "Invalid parent comment" }
   }
-  const trimmedText = text.trim()
+  const trimmedText = text.trim().slice(0, 10_000)
   if (!trimmedText)
     return { success: false, message: "Please enter your comment" }
   const db = await getDb()
-  const user = await db.user.findUnique({ where: { clerkId } })
-  if (!user) return { success: false, message: "User not found" }
+  const user = await getOrCreateLocalUser(clerkId)
+
+  const recentComment = await db.comment.findFirst({
+    where: {
+      authorId: user.id,
+      createdAt: { gt: new Date(Date.now() - 10_000) },
+    },
+    select: { id: true },
+  })
+  if (recentComment) {
+    return { success: false, message: "Wait a few seconds before commenting" }
+  }
 
   if (normalizedParentId) {
     const parent = await db.comment.findFirst({
@@ -186,10 +170,6 @@ export const replyAction = async ({
       text: trimmedText,
     },
   })
-  await db.story.update({
-    where: { id: storyId },
-    data: { descendants: { increment: 1 } },
-  })
   // Ensure the item page re-renders with fresh comments
   try {
     revalidatePath("/item")
@@ -203,26 +183,24 @@ export const voteAction = async (storyId: number, how: VoteStatus) => {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { success: false, message: "Not Login" }
   const db = await getDb()
-  const user = await db.user.findUnique({ where: { clerkId } })
-  if (!user) return { success: false, message: "User not found" }
+  const user = await getOrCreateLocalUser(clerkId)
+
   if (how === "up") {
-    await db.vote.upsert({
+    const existingVote = await db.vote.findUnique({
       where: { userId_storyId: { userId: user.id, storyId } },
-      update: {},
-      create: { userId: user.id, storyId },
     })
-    await db.story.update({
-      where: { id: storyId },
-      data: { score: { increment: 1 } },
-    })
+    if (!existingVote) {
+      await db.vote.create({ data: { userId: user.id, storyId } })
+    }
   } else {
-    await db.vote
-      .delete({ where: { userId_storyId: { userId: user.id, storyId } } })
-      .catch(() => null)
-    await db.story.update({
-      where: { id: storyId },
-      data: { score: { decrement: 1 } },
+    const existingVote = await db.vote.findUnique({
+      where: { userId_storyId: { userId: user.id, storyId } },
     })
+    if (existingVote) {
+      await db.vote.delete({
+        where: { userId_storyId: { userId: user.id, storyId } },
+      })
+    }
   }
   revalidatePath("/user/upvoted")
   revalidatePublicStoryCaches()
@@ -235,52 +213,35 @@ export const submitStoryAction = async (formData: FormData) => {
     redirect(`/login?goto=/submit`)
   }
   const db = await getDb()
-  let user = await db.user.findUnique({ where: { clerkId } })
-  if (!user) {
-    // Create minimal user record if missing
-    const cUser = await currentUser()
-    const preferredUsername = cUser?.username || clerkId
-    user = await db.user.create({
-      data: {
-        clerkId,
-        username: preferredUsername,
-        profile: { create: {} },
-      },
-    })
+  const user = await getOrCreateLocalUser(clerkId)
+
+  const recentStory = await db.story.findFirst({
+    where: {
+      authorId: user.id,
+      createdAt: { gt: new Date(Date.now() - 60_000) },
+    },
+    select: { id: true },
+  })
+  if (recentStory) {
+    redirect(`/submit?error=Wait a minute before submitting again`)
   }
-  // Ensure username stays in sync with Clerk username if it changes
-  try {
-    const cUser = await currentUser()
-    const desiredUsername = cUser?.username || clerkId
-    if (desiredUsername && user.username !== desiredUsername) {
-      user = await db.user.update({
-        where: { id: user.id },
-        data: { username: desiredUsername },
-      })
-    }
-  } catch (_) {}
 
   const { title, url, text, type, isSelfPromo, commercialDisclosure } =
     parseSubmitStoryForm(formData)
 
-  console.log(`[submitStoryAction] incoming`, {
-    title,
-    url,
-    textLen: text.length,
-    type,
-    clerkId,
-  })
-
-  if (!title || (!url && !text)) {
-    redirect(`/submit?error=Invalid payload`)
+  const validationError = validateSubmitStoryInput({ title, url, text })
+  if (validationError) {
+    redirect(`/submit?error=${encodeURIComponent(validationError)}`)
   }
 
   // Validate URL if provided
   let validatedUrl: string | null = null
   if (url) {
     try {
-      // Check if URL is valid
-      new URL(url)
+      const parsedUrl = new URL(url)
+      if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+        redirect(`/submit?error=Only HTTP and HTTPS links are supported`)
+      }
       validatedUrl = url
     } catch (error) {
       console.error(`[submitStoryAction] Invalid URL: ${url}`, error)
@@ -302,11 +263,6 @@ export const submitStoryAction = async (formData: FormData) => {
       commercialDisclosure,
       authorId: user.id,
     },
-  })
-  console.log(`[submitStoryAction] created story`, {
-    storyId: story.id,
-    type,
-    authorId: user.id,
   })
   const destination = storyTypeFeedPath(type)
   revalidatePath(destination)
@@ -385,8 +341,7 @@ export const deleteCommentAction = async (formData: FormData) => {
   const storyId = Number(formData.get("storyId"))
   if (!commentId) return { success: false, message: "Invalid comment" }
   const db = await getDb()
-  const user = await db.user.findUnique({ where: { clerkId } })
-  if (!user) return { success: false, message: "User not found" }
+  const user = await getOrCreateLocalUser(clerkId)
   const comment = await db.comment.findUnique({ where: { id: commentId } })
   if (!comment) return { success: false, message: "Comment not found" }
   if (comment.authorId !== user.id)

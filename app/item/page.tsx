@@ -7,14 +7,15 @@ import Loading from "@/components/loading"
 import ItemWithComment from "./components/item-with-comment"
 
 type Props = {
-  searchParams: { id: string }
+  searchParams: Promise<{ id: string }>
 }
 
 export async function generateMetadata(
   { searchParams }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const storyId = Number(searchParams.id)
+  const query = await searchParams
+  const storyId = Number(query.id)
   const story = await getStory(storyId)
   return {
     title: `${story?.title || "Comment"}`,
@@ -22,7 +23,8 @@ export async function generateMetadata(
 }
 
 export default async function Page({ searchParams }: Props) {
-  const id = Number(searchParams.id)
+  const query = await searchParams
+  const id = Number(query.id)
   return (
     <Suspense key={id} fallback={<Loading />}>
       <ItemWithComment id={id} />

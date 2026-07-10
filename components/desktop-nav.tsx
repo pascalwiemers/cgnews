@@ -15,7 +15,7 @@ export function DesktopNav({ className, ...props }: DesktopNavProps) {
 
   return (
     <div className={className} {...props}>
-      <nav className="flex items-center gap-2 text-xs">
+      <nav className="flex items-center gap-5 text-xs">
         <NavGroup items={feedItems} pathname={pathname} homeAsActive />
         <NavGroup items={channelItems} pathname={pathname} />
       </nav>
@@ -33,7 +33,7 @@ function NavGroup({
   homeAsActive?: boolean
 }) {
   return (
-    <div className="inline-flex min-w-0 items-center gap-1 rounded-full border border-border/70 bg-secondary/35 p-1">
+    <div className="inline-flex min-w-0 items-center gap-4">
       {items.map((navItem) => {
         const active =
           pathname === navItem.link ||
@@ -45,10 +45,8 @@ function NavGroup({
             href={navItem.link}
             prefetch={false}
             className={cn(
-              "rounded-full px-2.5 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:bg-secondary/75 hover:text-foreground hover:no-underline",
-              active
-                ? "bg-primary/12 text-primary shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.28)]"
-                : ""
+              "tab-underline py-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:no-underline",
+              active ? "tab-underline-active text-foreground" : ""
             )}
           >
             {navItem.name}

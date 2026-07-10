@@ -4,9 +4,9 @@ import { ClerkProvider } from "@clerk/nextjs"
 
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
+import { AmbientCanvas } from "@/components/ambient-canvas"
 import Footer from "@/components/footer"
 import { Header } from "@/components/header"
-import { SignalField } from "@/components/signal-field"
 import { ThemeProvider } from "@/components/theme-provider"
 
 import "./globals.css"
@@ -19,6 +19,7 @@ const fontMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" })
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://cgnews.app"),
   title: {
     template: `%s | ${siteConf.title}`,
     default: siteConf.title,
@@ -34,6 +35,14 @@ export const metadata: Metadata = {
   ],
   authors: siteConf.authors,
   creator: siteConf.authors[0].name,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: siteConf.title,
+    title: siteConf.title,
+    description: siteConf.description,
+    url: "https://cgnews.app",
+  },
 }
 
 export default function RootLayout({
@@ -53,17 +62,17 @@ export default function RootLayout({
         >
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="dark"
+            forcedTheme="dark"
             disableTransitionOnChange
           >
-            <div className="command-shell flex min-h-screen flex-col items-center bg-background">
-              <SignalField />
+            <div className="command-shell flex min-h-screen flex-col items-center">
+              <AmbientCanvas />
               <Header />
               <div className="flex w-full flex-1">
                 <div className="container relative z-10 flex max-w-5xl flex-1">
-                  <div className="page-surface -mt-2 mb-4 w-full rounded-b-md rounded-t-none border-t-0 sm:mb-6">
-                    <main className="flex flex-1 flex-col px-2 pb-3 pt-6 sm:px-4 sm:pt-7">
+                  <div className="page-surface w-full">
+                    <main className="flex flex-1 flex-col pb-12 pt-5 sm:pt-7">
                       {children}
                     </main>
                   </div>

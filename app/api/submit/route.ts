@@ -1,13 +1,18 @@
 import { revalidatePath, revalidateTag } from "next/cache"
 import { NextResponse } from "next/server"
-import { auth, currentUser } from "@clerk/nextjs/server"
+import { auth } from "@clerk/nextjs/server"
 
 import {
   PUBLIC_FEED_CACHE_TAG,
   PUBLIC_SEARCH_CACHE_TAG,
 } from "@/lib/cache-tags"
 import { getDb } from "@/lib/db"
-import { parseSubmitStoryForm, storyTypeFeedPath } from "@/lib/submit-story"
+import { getOrCreateLocalUser } from "@/lib/local-user"
+import {
+  parseSubmitStoryForm,
+  storyTypeFeedPath,
+  validateSubmitStoryInput,
+} from "@/lib/submit-story"
 
 export async function POST(req: Request) {
   const { userId: clerkId } = await auth()
@@ -16,36 +21,29 @@ export async function POST(req: Request) {
   }
   try {
     const db = await getDb()
-    let user = await db.user.findUnique({ where: { clerkId } })
-    if (!user) {
-      const cUser = await currentUser()
-      const preferredUsername = cUser?.username || clerkId
-      user = await db.user.create({
-        data: { clerkId, username: preferredUsername, profile: { create: {} } },
-      })
-    } else {
-      // Keep username in sync if it changed
-      const cUser = await currentUser()
-      const desiredUsername = cUser?.username || clerkId
-      if (desiredUsername && user.username !== desiredUsername) {
-        user = await db.user.update({
-          where: { id: user.id },
-          data: { username: desiredUsername },
-        })
-      }
+    const user = await getOrCreateLocalUser(clerkId)
+
+    const recentStory = await db.story.findFirst({
+      where: {
+        authorId: user.id,
+        createdAt: { gt: new Date(Date.now() - 60_000) },
+      },
+      select: { id: true },
+    })
+    if (recentStory) {
+      return NextResponse.json(
+        { success: false, error: "Wait a minute before submitting again" },
+        { status: 429 }
+      )
     }
 
     const formData = await req.formData()
     const { title, url, text, type, isSelfPromo, commercialDisclosure } =
       parseSubmitStoryForm(formData)
-    if (!title || (!url && !text)) {
-      console.warn(`[api/submit] invalid payload`, {
-        title,
-        urlLen: url.length,
-        textLen: text.length,
-      })
+    const validationError = validateSubmitStoryInput({ title, url, text })
+    if (validationError) {
       return NextResponse.json(
-        { success: false, error: "Invalid payload" },
+        { success: false, error: validationError },
         { status: 400 }
       )
     }
@@ -61,12 +59,6 @@ export async function POST(req: Request) {
         authorId: user.id,
       },
     })
-    console.log(`[api/submit] created story`, {
-      storyId: story.id,
-      type,
-      authorId: user.id,
-    })
-
     const dest = storyTypeFeedPath(type)
     revalidatePath(dest)
     revalidatePath("/")

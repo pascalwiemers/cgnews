@@ -53,8 +53,8 @@ export default async function TabAbout({
 
   return (
     <div className="w-full space-y-5">
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_17rem]">
-        <div className="min-w-0 space-y-4">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17rem]">
+        <div className="min-w-0 space-y-5">
           {rows.length > 0 && (
             <dl className="command-panel divide-y divide-border/60 overflow-hidden">
               {rows.map((row) => (
@@ -98,18 +98,13 @@ export default async function TabAbout({
             <EmptyProfileState copy="No profile fields have been published yet." />
           )}
         </div>
-        <aside className="signal-panel min-w-0 p-3">
+        <aside className="min-w-0 border-l border-border/70 pl-4">
           <div className="metadata-label mb-2">Status</div>
           <div className="space-y-2 text-sm text-muted-foreground">
             <p className="[overflow-wrap:anywhere]">
               Public profile metadata for CG work, tools, production notes, and
               availability context.
             </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <span className="command-pill">text-first</span>
-              <span className="command-pill">public</span>
-              <span className="command-pill">portable</span>
-            </div>
           </div>
         </aside>
       </section>
@@ -119,7 +114,7 @@ export default async function TabAbout({
           action={updateProfileAction}
           className="space-y-4 border-t border-border/70 pt-5"
         >
-          <div className="command-panel grid gap-3 p-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-2 text-sm font-medium text-foreground">
               <span className="text-muted-foreground">Website</span>
               <Input
@@ -177,7 +172,7 @@ export default async function TabAbout({
               />
             </label>
           </div>
-          <label className="command-panel block space-y-2 p-3 text-sm font-medium text-foreground">
+          <label className="block space-y-2 text-sm font-medium text-foreground">
             <span className="text-muted-foreground">Bio/about</span>
             <Textarea
               className="min-h-28 bg-background/80"
@@ -198,7 +193,7 @@ export default async function TabAbout({
 
 function EmptyProfileState({ copy }: { copy: string }) {
   return (
-    <div className="command-panel border-dashed p-4 text-sm text-muted-foreground">
+    <div className="border-l-2 border-border px-4 py-2 text-sm text-muted-foreground">
       <div className="metadata-label mb-2">Profile</div>
       <p>{copy}</p>
     </div>

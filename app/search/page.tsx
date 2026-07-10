@@ -7,34 +7,36 @@ import ItemList from "@/components/item-list"
 import Loading from "@/components/loading"
 
 type Props = {
-  searchParams: { query?: string; sort?: string; cursor?: string }
+  searchParams: Promise<{ query?: string; sort?: string; cursor?: string }>
 }
 
 export async function generateMetadata(
   { searchParams }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const query = searchParams.query
+  const params = await searchParams
+  const query = params.query
   return {
     title: `Search: ${query}`,
   }
 }
 
 export default async function Page({ searchParams }: Props) {
-  const query = searchParams.query
+  const params = await searchParams
+  const query = params.query
   if (!query) {
     notFound()
   }
   const pageSize = 30
   return (
     <Suspense
-      key={`${query}_${searchParams.cursor || "first"}_${pageSize}`}
+      key={`${query}_${params.cursor || "first"}_${pageSize}`}
       fallback={<Loading />}
     >
       <SearchResult
         query={query}
-        sort={searchParams.sort}
-        cursor={searchParams.cursor}
+        sort={params.sort}
+        cursor={params.cursor}
         pageSize={pageSize}
       />
     </Suspense>
