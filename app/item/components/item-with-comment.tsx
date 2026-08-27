@@ -11,11 +11,9 @@ import { getStory } from "@/lib/data"
 import { commentCount, replyableStroy } from "@/lib/hn-item-utils"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import Fave from "@/components/fave"
 import HtmlText from "@/components/html-text"
-import { SignalField } from "@/components/signal-field"
 import StoryBy from "@/components/story-by"
 import StoryDisclosureLabels from "@/components/story-disclosure-labels"
 import StoryPoint from "@/components/story-point"
@@ -51,90 +49,65 @@ export default async function ItemWithComment({
     isCurator(),
   ])
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col justify-start space-y-5">
-      <article className="signal-panel overflow-hidden">
-        <div className="relative overflow-hidden border-b border-border/70 p-4 sm:p-5">
-          <SignalField className="-right-40 -top-28 h-72 w-[34rem] opacity-35 sm:-right-28" />
-          <div className="relative grid min-w-0 gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
-            <div className="min-w-0 space-y-3">
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <span className="command-pill border-primary/35 bg-primary/10 font-mono text-[10px] uppercase tracking-[0.12em] text-primary">
-                  story dossier
-                </span>
-                {story.dead && (
-                  <span className="command-pill border-destructive/40 bg-destructive/10 text-destructive">
-                    flagged
-                  </span>
-                )}
-                <StoryDisclosureLabels
-                  isSelfPromo={story.isSelfPromo}
-                  commercialDisclosure={story.commercialDisclosure}
-                />
-              </div>
-              <Link
-                className={cn(
-                  "block min-w-0 break-words text-[1.9rem] font-semibold leading-[1.08] text-foreground transition-colors hover:text-primary sm:text-4xl",
-                  story.dead &&
-                    "text-muted-foreground hover:text-muted-foreground"
-                )}
-                rel="noopener noreferrer nofollow"
-                href={story.url || `/item?id=${story.id}`}
-                target={story.url ? "_blank" : "_self"}
-              >
-                {story.dead ? "[flagged] " : ""}
-                {story.title}
-              </Link>
-            </div>
-            <aside className="grid min-w-0 gap-2 border-t border-border/60 pt-3 font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground md:border-l md:border-t-0 md:pl-4 md:pt-0">
-              <div className="flex min-w-0 items-center justify-between gap-3 md:block">
-                <span className="metadata-label">source</span>
-                <div className="mt-0 min-w-0 truncate text-right normal-case tracking-normal text-foreground/80 md:mt-1 md:text-left">
-                  {story.url ? <StoryUrl url={story.url} /> : "discussion"}
-                </div>
-              </div>
-              <div className="flex min-w-0 items-center justify-between gap-3 border-t border-border/50 pt-2 md:block">
-                <span className="metadata-label">action</span>
-                <div className="mt-0 flex items-center justify-end gap-2 md:mt-2 md:justify-start">
-                  <Fave storyId={story.id} faved={faved} />
-                  <Link
-                    href={`/item?id=${story.id}`}
-                    className="command-pill h-8 rounded-md px-2 font-mono text-[10px] uppercase tracking-widest hover:no-underline"
-                  >
-                    permalink
-                  </Link>
-                </div>
-              </div>
-            </aside>
+    <div className="mx-auto flex w-full max-w-4xl flex-col justify-start space-y-6">
+      <article className="overflow-hidden rounded-xl border border-border/70 bg-card/65 shadow-[0_18px_50px_hsl(var(--background)/0.28)]">
+        <div className="space-y-4 p-4 sm:p-6">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            {story.dead && (
+              <span className="command-pill border-destructive/40 bg-destructive/10 text-destructive">
+                flagged
+              </span>
+            )}
+            <StoryDisclosureLabels
+              isSelfPromo={story.isSelfPromo}
+              commercialDisclosure={story.commercialDisclosure}
+            />
           </div>
-        </div>
-        <div className="grid border-b border-border/70 bg-command-raised/45 font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground sm:grid-cols-4">
-          <div className="min-w-0 border-b border-border/50 px-4 py-2.5 sm:border-b-0 sm:border-r sm:px-5">
+          <Link
+            className={cn(
+              "block min-w-0 break-words text-[1.9rem] font-semibold leading-[1.1] text-foreground transition-colors hover:text-primary sm:text-4xl",
+              story.dead && "text-muted-foreground hover:text-muted-foreground"
+            )}
+            rel="noopener noreferrer nofollow"
+            href={story.url || `/item?id=${story.id}`}
+            target={story.url ? "_blank" : "_self"}
+          >
+            {story.dead ? "[flagged] " : ""}
+            {story.title}
+          </Link>
+          <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 font-mono text-[11px] uppercase tracking-[0.04em] text-muted-foreground">
             <StoryPoint score={story.score} />
-          </div>
-          <div className="min-w-0 border-b border-border/50 px-4 py-2.5 sm:border-b-0 sm:border-r sm:px-5">
             <StoryBy by={story.by} />
-          </div>
-          <div className="min-w-0 border-b border-border/50 px-4 py-2.5 sm:border-b-0 sm:border-r sm:px-5">
             <StoryTime time={story.time} />
+            <span>
+              {story.descendants > 0
+                ? commentCount(story.descendants)
+                : "no comments"}
+            </span>
+            {story.url ? <StoryUrl url={story.url} /> : <span>discussion</span>}
           </div>
-          <div className="min-w-0 px-4 py-2.5 sm:px-5">
-            {story.descendants > 0
-              ? commentCount(story.descendants)
-              : "no comments"}
+          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <Fave storyId={story.id} faved={faved} />
+            <Link
+              href={`/item?id=${story.id}`}
+              className="underline-offset-4 hover:text-primary hover:underline"
+            >
+              Permalink
+            </Link>
           </div>
         </div>
-        <div className="px-4 py-5 sm:px-5">
-          {story.text && (
+        {story.text && (
+          <div className="border-t border-border/60 p-4 sm:px-6">
             <HtmlText
               className="block break-words text-[15px] leading-7 text-foreground/90"
               innerHtml={story.text}
             />
-          )}
-        </div>
+          </div>
+        )}
         {story.curatorNote && (
-          <aside className="mx-4 mb-5 border-l-2 border-command-amber/80 bg-command-amber/10 px-4 py-3 text-sm leading-6 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] sm:mx-5">
-            <div className="mb-1 font-mono text-[11px] uppercase tracking-[0.12em] text-command-amber">
-              curator note{story.curator ? ` by ${story.curator}` : ""}
+          <aside className="mx-4 mb-4 rounded-lg border border-command-amber/25 bg-command-amber/[0.06] px-4 py-3 text-sm leading-6 sm:mx-6 sm:mb-6">
+            <div className="mb-1 text-xs font-medium text-command-amber/90">
+              Curator note{story.curator ? ` by ${story.curator}` : ""}
             </div>
             <p className="whitespace-pre-wrap break-words text-foreground/90">
               {story.curatorNote}
@@ -184,10 +157,13 @@ export default async function ItemWithComment({
         )}
       </article>
       {replyableStroy(story) && (
-        <section className="panel p-4 sm:px-5" aria-label="Add a comment">
-          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3 border-b border-border/60 pb-3">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-foreground">
-              Join the thread
+        <section
+          className="rounded-xl border border-border/70 bg-card/55 p-4 sm:p-5"
+          aria-label="Add a comment"
+        >
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+            <h2 className="text-sm font-semibold text-foreground">
+              Add a comment
             </h2>
             <span className="font-mono text-[11px] text-muted-foreground">
               {story.descendants > 0
@@ -198,12 +174,9 @@ export default async function ItemWithComment({
           <ReplyForm storyId={story.id} logined={!!clerkUser} />
         </section>
       )}
-      <Separator orientation="horizontal" className="my-1 bg-border/60" />
       <section className="space-y-3" aria-label="Comments">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold uppercase tracking-[0.08em] text-foreground">
-            Comment telemetry
-          </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
+          <h2 className="text-lg font-semibold text-foreground">Discussion</h2>
           {story.descendants > 0 && (
             <span className="font-mono text-[11px] text-muted-foreground">
               {commentCount(story.descendants)}

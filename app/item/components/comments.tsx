@@ -25,9 +25,9 @@ export default async function Comments({
   const myId = cu?.username || cu?.id
   if (!comments.length) {
     return (
-      <div className="signal-panel border-dashed px-4 py-6 text-sm leading-6 text-muted-foreground sm:px-5">
-        <div className="metadata-label mb-2 text-primary">no telemetry</div>
-        No comments yet. Start the production notes here.
+      <div className="rounded-xl border border-dashed border-border/70 bg-card/35 px-4 py-6 text-sm leading-6 text-muted-foreground sm:px-5">
+        <div className="mb-1 font-medium text-foreground">No comments yet</div>
+        Start the discussion here.
       </div>
     )
   }
@@ -65,43 +65,42 @@ function CommentThread({
     <li
       className={cn(
         "relative min-w-0 text-sm",
-        depth > 0 && "ml-2 border-l border-primary/25 pl-3 sm:ml-3 sm:pl-4"
+        depth > 0 && "ml-3 border-l border-border/70 pl-3 sm:ml-5 sm:pl-4"
       )}
     >
       <div
         className={cn(
-          "relative min-w-0 overflow-hidden rounded-md border border-border/70 bg-card/75 p-3 shadow-[inset_0_1px_0_hsl(var(--foreground)/0.04)] sm:px-4",
-          depth > 0 && "border-l-primary/35 bg-card/55"
+          "min-w-0 rounded-lg border border-border/65 bg-card/45 p-3.5 sm:p-4",
+          depth > 0 && "border-border/55 bg-background/25"
         )}
       >
-        <div className="absolute inset-y-0 left-0 w-1 bg-primary/20" />
-        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 pl-1 font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
           <Link
             rel="noreferrer nofollow"
-            className="max-w-full truncate text-foreground/80 hover:text-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
+            className="max-w-full truncate font-medium text-foreground/85 hover:text-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
             href={`/user?id=${comment.by}`}
           >
             {comment.by}
           </Link>
-          <span aria-hidden="true" className="text-border">
-            /
+          <span aria-hidden="true" className="text-muted-foreground/35">
+            &middot;
           </span>
           <span>{timeAgo(comment.time)} ago</span>
-          <span aria-hidden="true" className="text-border">
-            /
+          <span aria-hidden="true" className="text-muted-foreground/35">
+            &middot;
           </span>
           <ReplyDialog comment={comment} storyId={story.id} />
           {canDelete && (
             <>
-              <span aria-hidden="true" className="text-border">
-                /
+              <span aria-hidden="true" className="text-muted-foreground/35">
+                &middot;
               </span>
               <form action={deleteCommentFormAction} className="inline-flex">
                 <input type="hidden" name="commentId" value={comment.id} />
                 <input type="hidden" name="storyId" value={story.id} />
                 <button
                   type="submit"
-                  className="rounded-sm text-[11px] text-muted-foreground underline-offset-4 hover:text-destructive hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
+                  className="rounded-sm text-xs text-muted-foreground underline-offset-4 hover:text-destructive hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
                   aria-label={`Delete comment by ${comment.by}`}
                 >
                   delete
@@ -110,7 +109,7 @@ function CommentThread({
             </>
           )}
         </div>
-        <div className="mt-2 whitespace-pre-wrap break-words pl-1 text-[15px] leading-7 text-foreground/90">
+        <div className="mt-2 whitespace-pre-wrap break-words text-[15px] leading-7 text-foreground/90">
           {comment.text}
         </div>
       </div>

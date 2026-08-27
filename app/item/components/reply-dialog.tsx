@@ -32,7 +32,7 @@ export default function ReplyDialog({
       <DialogTrigger asChild>
         <Button
           size={"sm"}
-          className="h-auto rounded-sm p-0 font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground underline-offset-4 hover:text-primary focus-visible:ring-ring/55"
+          className="h-auto rounded-sm p-0 text-xs font-medium text-muted-foreground underline-offset-4 hover:text-primary focus-visible:ring-ring/55"
           variant={"link"}
           disabled={!inTwoWeeks(comment.time)}
           aria-label={`Reply to ${comment.by}`}
@@ -41,12 +41,11 @@ export default function ReplyDialog({
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="signal-panel border-border/80 bg-card text-card-foreground sm:rounded-md"
+        className="border-border/80 bg-card text-card-foreground sm:rounded-xl"
         onEscapeKeyDown={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
-        <DialogHeader>
-          <div className="metadata-label text-primary">reply uplink</div>
+        <DialogHeader className="space-y-3">
           <DialogTitle className="text-lg leading-tight">
             Reply to{" "}
             <Link
@@ -62,7 +61,7 @@ export default function ReplyDialog({
             </Link>
           </DialogTitle>
           {comment.text && (
-            <DialogDescription className="max-h-[260px] overflow-y-auto whitespace-pre-wrap break-words border-l-2 border-primary/35 bg-background/45 py-2 pl-3 leading-6 text-muted-foreground">
+            <DialogDescription className="max-h-[260px] overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-border/70 bg-background/50 p-3 leading-6 text-muted-foreground">
               {comment.text}
             </DialogDescription>
           )}

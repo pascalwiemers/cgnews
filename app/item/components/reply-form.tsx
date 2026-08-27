@@ -76,11 +76,13 @@ export default function ReplyForm({
           name="text"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="metadata-label">transmission</FormLabel>
+              <FormLabel className="text-sm font-medium text-foreground">
+                Comment
+              </FormLabel>
               <FormControl>
                 <Textarea
-                  className="h-32 resize-y rounded-md border-border/80 bg-background/75 leading-6 placeholder:text-muted-foreground/65 focus-visible:ring-primary/60"
-                  placeholder="Add a considered note, question, or production detail."
+                  className="h-32 resize-y rounded-lg border-border/75 bg-background/70 leading-6 placeholder:text-muted-foreground/60 focus-visible:ring-primary/55"
+                  placeholder="Add a comment."
                   {...field}
                 />
               </FormControl>
@@ -100,7 +102,7 @@ export default function ReplyForm({
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="grid size-8 place-items-center rounded-md border border-border/70 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
+                  className="grid size-8 place-items-center rounded-lg border border-border/70 text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/55"
                   aria-label="Login required to reply"
                 >
                   <InfoIcon className="size-4" />
@@ -144,7 +146,7 @@ function ReplyButton({ text, logined }: { text: string; logined: boolean }) {
     <Button
       type="submit"
       disabled={!logined || pending}
-      className="rounded-md"
+      className="rounded-lg"
       aria-disabled={!logined || pending}
     >
       {pending && <Loader2 className="mr-2 animate-spin" size={16} />}
